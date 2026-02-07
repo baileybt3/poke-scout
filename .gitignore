@@ -18,7 +18,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Secrets (if you add them later)
-**/secrets.json
-**/appsettings.*.local.json
