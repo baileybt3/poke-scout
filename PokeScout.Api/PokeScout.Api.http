@@ -1,0 +1,6 @@
+@PokeScout.Api_HostAddress = http://localhost:5062
+
+GET {{PokeScout.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
