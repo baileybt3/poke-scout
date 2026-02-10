@@ -77,7 +77,7 @@ External data is cached into Postgres for speed + stability.
 - Blazor Web App
 - PostgreSQL + EF Core (migrations)
 - Scalar (OpenAPI UI)
-- Background jobs: Hangfire **or** Quartz.NET
+- Background jobs: Hangfire
 
 Optional: Redis, Serilog, FluentValidation, Mapster/AutoMapper
 
