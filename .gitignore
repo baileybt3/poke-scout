@@ -9,6 +9,9 @@
 **/bin/
 **/obj/
 
+# Local dev settings
+PokeScout.Api/appsettings.Development.json
+
 # Rider
 .idea/
 
