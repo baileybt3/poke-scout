@@ -33,6 +33,8 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
 app.MapGet("/", () => Results.Ok("PokeScout API is running!"));
 
 app.Run();
