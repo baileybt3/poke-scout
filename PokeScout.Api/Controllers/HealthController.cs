@@ -5,7 +5,7 @@ using PokeScout.Api.Data;
 namespace PokeScout.Api.Controllers
 {
     [ApiController]
-    [Route("health")]
+    [Route("diag")]
     public class HealthController : ControllerBase
     {
         private readonly PokeScoutDbContext _db;

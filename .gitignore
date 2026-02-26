@@ -5,6 +5,10 @@
 *.userosscache
 *.sln.docstates
 
+# Visual Studio publish profiles / Azure service deps (environment-specific)
+**/Properties/PublishProfiles/
+**/Properties/ServiceDependencies/
+
 # Build outputs
 **/bin/
 **/obj/

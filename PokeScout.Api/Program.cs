@@ -20,9 +20,12 @@ builder.Services.AddScoped<ICardService, EfCardService>();
 // Generates /openapi/v1.json
 builder.Services.AddOpenApi();
 
+// Service Health Check
+builder.Services.AddHealthChecks();
+
 // Register DbContext
 builder.Services.AddDbContext<PokeScoutDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -33,7 +36,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+app.MapHealthChecks("/health");
 
 app.MapGet("/", () => Results.Ok("PokeScout API is running!"));
 
