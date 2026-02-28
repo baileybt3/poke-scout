@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using PokeScout.Web.Components;
 
 namespace PokeScout.Web
@@ -11,6 +13,13 @@ namespace PokeScout.Web
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            builder.Services.AddScoped(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                var baseUrl = config["ApiBaseUrl"] ?? "https://localhost:7034/";
+                return new HttpClient { BaseAddress = new Uri(baseUrl) };
+            });
 
             var app = builder.Build();
 

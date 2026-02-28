@@ -1,0 +1,22 @@
+﻿@page "/test-api"
+@inject HttpClient Http
+
+<h3>API Test</h3>
+
+@if (result is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <pre>@result</pre>
+}
+
+@code {
+    private string? result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        result = await Http.GetStringAsync("api/cards");
+    }
+}

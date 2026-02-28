@@ -35,6 +35,11 @@ builder.Services.AddCors(options =>
         p.WithOrigins("https://localhost:7062", "http://localhost:5062")
             .AllowAnyHeader()
             .AllowAnyMethod());
+
+    options.AddPolicy("DevCors", p =>
+        p.AllowAnyOrigin()
+         .AllowAnyHeader()
+         .AllowAnyMethod());
 });
 
 var app = builder.Build();
@@ -44,6 +49,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(); // /scalar
     app.UseCors("WebDev");
+    app.UseCors("DevCors");
 }
 
 app.MapControllers();

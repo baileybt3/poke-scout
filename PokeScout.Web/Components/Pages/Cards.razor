@@ -1,0 +1,121 @@
+﻿@page "/cards"
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<h3>Cards</h3>
+
+<EditForm Model="newCard" OnSubmit="CreateCardAsync">
+    <div style="display:grid; gap:8px; max-width:520px; margin-bottom:16px;">
+        <input placeholder="Name" @bind="newCard.Name" />
+        <input placeholder="Set" @bind="newCard.Set" />
+
+        <select @bind="newCard.Condition">
+            <option value="NM">NM</option>
+            <option value="LP">LP</option>
+            <option value="MP">MP</option>
+            <option value="HP">HP</option>
+            <option value="DMG">DMG</option>
+        </select>
+
+        <input type="number" min="1" @bind="newCard.Quantity" />
+        <input placeholder="Notes" @bind="newCard.Notes" />
+
+        <button type="submit">Add Card</button>
+
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div style="color:darkred;">@error</div>
+        }
+    </div>
+</EditForm>
+
+@if (cards is null)
+{
+    <p>Loading...</p>
+}
+else if (cards.Count == 0)
+{
+    <p>No cards yet.</p>
+}
+else
+{
+    <table style="border-collapse:collapse; width:100%;">
+        <thead>
+            <tr>
+                <th align="left">Name</th>
+                <th align="left">Set</th>
+                <th align="left">Condition</th>
+                <th align="left">Qty</th>
+                <th align="left">Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in cards)
+            {
+                <tr>
+                    <td>@c.Name</td>
+                    <td>@c.Set</td>
+                    <td>@c.Condition</td>
+                    <td>@c.Quantity</td>
+                    <td>@c.Notes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CardDto>? cards;
+    private string? error;
+
+    private CreateCardModel newCard = new()
+    {
+        Condition = "LP",
+        Quantity = 1
+    };
+
+    protected override async Task OnInitializedAsync()
+        => await LoadCardsAsync();
+
+    private async Task LoadCardsAsync()
+    {
+        error = null;
+        cards = await Http.GetFromJsonAsync<List<CardDto>>("api/cards") ?? new();
+    }
+
+    private async Task CreateCardAsync()
+    {
+        error = null;
+
+        var response = await Http.PostAsJsonAsync("api/cards", newCard);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            error = await response.Content.ReadAsStringAsync();
+            return;
+        }
+
+        // Reset + refresh
+        newCard = new CreateCardModel { Condition = "LP", Quantity = 1 };
+        await LoadCardsAsync();
+    }
+
+    private sealed class CardDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Set { get; set; } = "";
+        public string Condition { get; set; } = "";
+        public int Quantity { get; set; }
+        public string Notes { get; set; } = "";
+    }
+
+    private sealed class CreateCardModel
+    {
+        public string Name { get; set; } = "";
+        public string Set { get; set; } = "";
+        public string Condition { get; set; } = "LP";
+        public int Quantity { get; set; } = 1;
+        public string Notes { get; set; } = "";
+    }
+}
