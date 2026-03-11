@@ -1,0 +1,90 @@
+﻿@page "/catalog"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<h3>Catalog Search</h3>
+
+<div style="display:flex; gap:8px; margin-bottom:16px;">
+    <input @bind="searchTerm" placeholder="Search Pokémon card name" />
+    <button @onclick="SearchAsync">Search</button>
+</div>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (!string.IsNullOrWhiteSpace(error))
+{
+    <p style="color:darkred;">@error</p>
+}
+else if (results is not null && results.Count == 0)
+{
+    <p>No results found.</p>
+}
+else if (results is not null)
+{
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+        @foreach (var card in results)
+        {
+            <div style="border:1px solid #ccc; border-radius:12px; padding:12px;">
+                @if (!string.IsNullOrWhiteSpace(card.ImageUrl))
+                {
+                    <img src="@card.ImageUrl" alt="@card.Name" style="width:100%; border-radius:8px; margin-bottom:8px;" />
+                }
+
+                <h4 style="margin:0 0 8px 0;">@card.Name</h4>
+                <p style="margin:4px 0;"><strong>Set:</strong> @card.SetName</p>
+                <p style="margin:4px 0;"><strong>Rarity:</strong> @card.Rarity</p>
+                <p style="margin:4px 0;"><strong>Price:</strong> @(card.MarketPrice?.ToString("C") ?? "N/A")</p>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string searchTerm = "";
+    private bool isLoading;
+    private string? error;
+    private List<CatalogSearchResultDto>? results;
+
+    private async Task SearchAsync()
+    {
+        error = null;
+        results = null;
+
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            error = "Enter a card name.";
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            results = await Http.GetFromJsonAsync<List<CatalogSearchResultDto>>(
+                $"api/catalog/search?name={Uri.EscapeDataString(searchTerm)}") ?? new();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private sealed class CatalogSearchResultDto
+    {
+        public string ExternalId { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+        public string SetName { get; set; } = "";
+        public string Series { get; set; } = "";
+        public string Rarity { get; set; } = "";
+        public decimal? MarketPrice { get; set; }
+        public string TcgPlayerUrl { get; set; } = "";
+    }
+}

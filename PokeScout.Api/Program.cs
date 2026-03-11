@@ -18,6 +18,12 @@ builder.Services
 //Register service in DI
 builder.Services.AddScoped<ICardService, EfCardService>();
 
+// API Service registration
+builder.Services.AddHttpClient<IPokemonCatalogService, PokemonCatalogService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.tcgdex.net/v2/en/");
+});
+
 // Generates /openapi/v1.json
 builder.Services.AddOpenApi();
 
