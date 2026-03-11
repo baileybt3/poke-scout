@@ -1,24 +1,29 @@
 ﻿@page "/cards"
+@rendermode InteractiveServer
 @using System.Net.Http.Json
+@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 
 <h3>Cards</h3>
 
-<EditForm Model="newCard" OnSubmit="CreateCardAsync">
-    <div style="display:grid; gap:8px; max-width:520px; margin-bottom:16px;">
-        <input placeholder="Name" @bind="newCard.Name" />
-        <input placeholder="Set" @bind="newCard.Set" />
+<EditForm Model="newCard" OnValidSubmit="CreateCardAsync" FormName="AddCardForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 
-        <select @bind="newCard.Condition">
+    <div style="display:grid; gap:8px; max-width:520px; margin-bottom:16px;">
+        <InputText placeholder="Name" @bind-Value="newCard.Name" />
+        <InputText placeholder="Set" @bind-Value="newCard.Set" />
+
+        <InputSelect @bind-Value="newCard.Condition">
             <option value="NM">NM</option>
             <option value="LP">LP</option>
             <option value="MP">MP</option>
             <option value="HP">HP</option>
             <option value="DMG">DMG</option>
-        </select>
+        </InputSelect>
 
-        <input type="number" min="1" @bind="newCard.Quantity" />
-        <input placeholder="Notes" @bind="newCard.Notes" />
+        <InputNumber @bind-Value="newCard.Quantity" />
+        <InputText placeholder="Notes" @bind-Value="newCard.Notes" />
 
         <button type="submit">Add Card</button>
 
@@ -95,8 +100,12 @@ else
             return;
         }
 
-        // Reset + refresh
-        newCard = new CreateCardModel { Condition = "LP", Quantity = 1 };
+        newCard = new CreateCardModel
+        {
+            Condition = "LP",
+            Quantity = 1
+        };
+
         await LoadCardsAsync();
     }
 
@@ -112,10 +121,18 @@ else
 
     private sealed class CreateCardModel
     {
+        [Required]
+        [MinLength(1)]
         public string Name { get; set; } = "";
+
         public string Set { get; set; } = "";
+
+        [Required]
         public string Condition { get; set; } = "LP";
+
+        [Range(1, int.MaxValue)]
         public int Quantity { get; set; } = 1;
+
         public string Notes { get; set; } = "";
     }
 }
