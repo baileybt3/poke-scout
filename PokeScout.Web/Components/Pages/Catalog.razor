@@ -30,7 +30,9 @@ else if (results is not null)
             <div style="border:1px solid #ccc; border-radius:12px; padding:12px;">
                 @if (!string.IsNullOrWhiteSpace(card.ImageUrl))
                 {
-                    <img src="@card.ImageUrl" alt="@card.Name" style="width:100%; border-radius:8px; margin-bottom:8px;" />
+                    <img src="@GetImageUrl(card.ImageUrl)"
+                         alt="@card.Name"
+                         style="width:100%; border-radius:8px; margin-bottom:8px;" />
                 }
 
                 <h4 style="margin:0 0 8px 0;">@card.Name</h4>
@@ -43,6 +45,8 @@ else if (results is not null)
 }
 
 @code {
+    private const string ApiBaseUrl = "https://localhost:7034";
+
     private string searchTerm = "";
     private bool isLoading;
     private string? error;
@@ -74,6 +78,20 @@ else if (results is not null)
         {
             isLoading = false;
         }
+    }
+
+    private static string GetImageUrl(string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+            return "";
+
+        if (imageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return imageUrl;
+        }
+
+        return $"{ApiBaseUrl}{imageUrl}";
     }
 
     private sealed class CatalogSearchResultDto

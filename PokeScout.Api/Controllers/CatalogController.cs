@@ -8,11 +8,11 @@ namespace PokeScout.Api.Controllers;
 [Route("api/catalog")]
 public class CatalogController : ControllerBase
 {
-    private readonly IPokemonCatalogService _catalog;
+    private readonly IPokemonCatalogService _catalogService;
 
-    public CatalogController(IPokemonCatalogService catalog)
+    public CatalogController(IPokemonCatalogService catalogService)
     {
-        _catalog = catalog;
+        _catalogService = catalogService;
     }
 
     [HttpGet("search")]
@@ -23,7 +23,17 @@ public class CatalogController : ControllerBase
         if (string.IsNullOrWhiteSpace(name))
             return BadRequest("name is required.");
 
-        var results = await _catalog.SearchByNameAsync(name, cancellationToken);
+        var results = await _catalogService.SearchByNameAsync(name, cancellationToken);
         return Ok(results);
+    }
+
+    [HttpGet("image/{id}")]
+    public async Task<IActionResult> Image(
+        string id,
+        [FromQuery] string size = "high",
+        CancellationToken cancellationToken = default)
+    {
+        var image = await _catalogService.GetImageAsync(id, size, cancellationToken);
+        return File(image.Bytes, image.ContentType);
     }
 }

@@ -21,7 +21,13 @@ builder.Services.AddScoped<ICardService, EfCardService>();
 // API Service registration
 builder.Services.AddHttpClient<IPokemonCatalogService, PokemonCatalogService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.tcgdex.net/v2/en/");
+    client.BaseAddress = new Uri("https://api.pokewallet.io/");
+
+    var apiKey = builder.Configuration["PokeWallet:ApiKey"];
+    if (!string.IsNullOrWhiteSpace(apiKey))
+    {
+        client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+    }
 });
 
 // Generates /openapi/v1.json
