@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.OpenApi" Version="1.6.25" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.36" />
+    <PackageReference Include="Stripe.net" Version="50.4.1" />
   </ItemGroup>
 
   <ItemGroup>

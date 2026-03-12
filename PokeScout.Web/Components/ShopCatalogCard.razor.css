@@ -1,0 +1,20 @@
+﻿.shop-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+    .shop-card:hover {
+        transform: translateY(-4px);
+    }
+
+.shop-card-image {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.95rem;
+}

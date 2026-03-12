@@ -1,7 +1,9 @@
 ﻿@page "/catalog"
 @rendermode InteractiveServer
 @using System.Net.Http.Json
+@using PokeScout.Web.Models
 @inject HttpClient Http
+@inject NavigationManager Navigation
 
 <h3>Catalog Search</h3>
 
@@ -9,6 +11,13 @@
     <input @bind="searchTerm" placeholder="Search Pokémon card name" />
     <button @onclick="SearchAsync">Search</button>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(CheckoutMessage))
+{
+    <div style="margin:16px 0; padding:12px 16px; border-radius:12px; background:@(CheckoutStatus == "success" ? "#dcfce7" : "#fef3c7"); color:#111827; border:1px solid @(CheckoutStatus == "success" ? "#86efac" : "#fcd34d");">
+        @CheckoutMessage
+    </div>
+}
 
 @if (isLoading)
 {
@@ -24,7 +33,7 @@ else if (results is not null && results.Count == 0)
 }
 else if (results is not null)
 {
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; margin-bottom:40px;">
         @foreach (var card in results)
         {
             <div style="border:1px solid #ccc; border-radius:12px; padding:12px;">
@@ -44,6 +53,75 @@ else if (results is not null)
     </div>
 }
 
+<hr style="margin:32px 0;" />
+
+<h3>Deck Shop</h3>
+<p style="margin-bottom:16px; color:#666;">
+    Placeholder products for your future Stripe shop.
+</p>
+
+@if (!string.IsNullOrWhiteSpace(shopError))
+{
+    <p style="color:darkred;">@shopError</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(checkoutError))
+{
+    <p style="color:darkred;">@checkoutError</p>
+}
+
+@if (isShopLoading)
+{
+    <p>Loading shop...</p>
+}
+else if (shopItems.Count == 0)
+{
+    <p>No shop items found.</p>
+}
+else
+{
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px;">
+        @foreach (var item in shopItems)
+        {
+            <div style="border:1px solid #ccc; border-radius:12px; overflow:hidden; background:white;">
+                <div style="height:180px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #f3f4f6, #e5e7eb); color:#6b7280; font-weight:600;">
+                    @(string.IsNullOrWhiteSpace(item.ImageUrl) ? "Image coming soon" : "")
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@GetImageUrl(item.ImageUrl)"
+                             alt="@item.Title"
+                             style="width:100%; height:100%; object-fit:cover;" />
+                    }
+                </div>
+
+                <div style="padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:10px;">
+                        <h4 style="margin:0;">@item.Title</h4>
+                        <span style="background:#111827; color:white; padding:4px 8px; border-radius:999px; font-size:12px;">
+                            @item.Tier
+                        </span>
+                    </div>
+
+                    <p style="margin:0 0 12px 0; color:#666;">@item.Description</p>
+
+                    <p style="margin:4px 0;"><strong>Condition:</strong> @item.Condition</p>
+                    <p style="margin:4px 0 12px 0;"><strong>Stock:</strong> @item.StockCount</p>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                        <span style="font-size:1.25rem; font-weight:bold;">$@item.Price.ToString("0.00")</span>
+
+                        <button disabled="@(!item.IsStripeReady || isCheckoutStarting)"
+                                @onclick="() => StartCheckoutAsync(item.Id)"
+                                style="padding:8px 12px; border:none; border-radius:8px; background:@(item.IsStripeReady ? "#2563eb" : "#9ca3af"); color:white; cursor:@(item.IsStripeReady ? "pointer" : "not-allowed");">
+                            @(isCheckoutStarting ? "Redirecting..." : item.ButtonText)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
 @code {
     private const string ApiBaseUrl = "https://localhost:7034";
 
@@ -51,6 +129,89 @@ else if (results is not null)
     private bool isLoading;
     private string? error;
     private List<CatalogSearchResultDto>? results;
+
+    private bool isShopLoading = true;
+    private string? shopError;
+    private string? checkoutError;
+    private bool isCheckoutStarting;
+    private List<ShopCatalogItemDto> shopItems = new();
+
+    [SupplyParameterFromQuery(Name = "checkout")]
+    private string? CheckoutStatus { get; set; }
+
+    [SupplyParameterFromQuery(Name = "session_id")]
+    private string? SessionId { get; set; }
+
+    private string? CheckoutMessage =>
+    CheckoutStatus switch
+    {
+        "success" => string.IsNullOrWhiteSpace(SessionId)
+            ? "Payment completed successfully."
+            : $"Payment completed successfully. Session: {SessionId}",
+        "cancel" => "Checkout was canceled.",
+        _ => null
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadShopAsync();
+    }
+
+    private async Task LoadShopAsync()
+    {
+        shopError = null;
+        isShopLoading = true;
+
+        try
+        {
+            shopItems = await Http.GetFromJsonAsync<List<ShopCatalogItemDto>>("api/shop") ?? new();
+        }
+        catch (Exception ex)
+        {
+            shopError = ex.Message;
+        }
+        finally
+        {
+            isShopLoading = false;
+        }
+    }
+
+    private async Task StartCheckoutAsync(string productId)
+    {
+        checkoutError = null;
+        isCheckoutStarting = true;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(
+                "api/checkout/create-session",
+                new CreateCheckoutSessionRequest { ProductId = productId });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                checkoutError = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            var session = await response.Content.ReadFromJsonAsync<CreateCheckoutSessionResponse>();
+
+            if (session is null || string.IsNullOrWhiteSpace(session.Url))
+            {
+                checkoutError = "Stripe session URL was missing.";
+                return;
+            }
+
+            Navigation.NavigateTo(session.Url, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            checkoutError = ex.Message;
+        }
+        finally
+        {
+            isCheckoutStarting = false;
+        }
+    }
 
     private async Task SearchAsync()
     {
@@ -104,5 +265,15 @@ else if (results is not null)
         public string Rarity { get; set; } = "";
         public decimal? MarketPrice { get; set; }
         public string TcgPlayerUrl { get; set; } = "";
+    }
+
+    private sealed class CreateCheckoutSessionRequest
+    {
+        public string ProductId { get; set; } = "";
+    }
+
+    private sealed class CreateCheckoutSessionResponse
+    {
+        public string Url { get; set; } = "";
     }
 }

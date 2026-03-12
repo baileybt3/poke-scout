@@ -4,6 +4,8 @@ using PokeScout.Api.Data;
 using PokeScout.Api.Services;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using PokeScout.Api.Models;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +55,12 @@ builder.Services.AddCors(options =>
          .AllowAnyHeader()
          .AllowAnyMethod());
 });
+
+// Stripe registration
+builder.Services.Configure<StripeOptions>(
+    builder.Configuration.GetSection("Stripe"));
+
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 var app = builder.Build();
 
