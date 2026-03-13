@@ -1,8 +1,18 @@
-﻿@using PokeScout.Web.Models
+﻿@using System.Net.Http.Json
+@using PokeScout.Web.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
 <div class="card h-100 shop-card shadow-sm border-0">
     <div class="shop-card-image">
-        Image coming soon
+        @if (!string.IsNullOrWhiteSpace(Item.ImageUrl))
+        {
+            <img src="@Item.ImageUrl" alt="@Item.Title" class="img-fluid h-100 w-100 object-fit-cover" />
+        }
+        else
+        {
+            <span>Image coming soon</span>
+        }
     </div>
 
     <div class="card-body d-flex flex-column">
@@ -18,11 +28,20 @@
             <div><strong>Stock:</strong> @Item.StockCount</div>
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger py-2 px-3 mb-3">
+                @errorMessage
+            </div>
+        }
+
         <div class="mt-auto d-flex justify-content-between align-items-center">
             <span class="fw-bold fs-5">$@Item.Price.ToString("0.00")</span>
 
-            <button class="btn btn-primary" disabled="@(!Item.IsStripeReady)">
-                @Item.ButtonText
+            <button class="btn btn-primary"
+                    @onclick="StartCheckoutAsync"
+                    disabled="@(!Item.IsStripeReady || isLoading)">
+                @(isLoading ? "Redirecting..." : Item.ButtonText)
             </button>
         </div>
     </div>
@@ -31,4 +50,59 @@
 @code {
     [Parameter]
     public ShopCatalogItem Item { get; set; } = new();
+
+    private bool isLoading;
+    private string? errorMessage;
+
+    private async Task StartCheckoutAsync()
+    {
+        if (!Item.IsStripeReady || string.IsNullOrWhiteSpace(Item.Id))
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/shop/checkout-session",
+                new CreateCheckoutSessionRequest
+                {
+                    ProductId = Item.Id
+                });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = "Checkout failed. Please try again.";
+                return;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<CreateCheckoutSessionResponse>();
+
+            if (result is null || string.IsNullOrWhiteSpace(result.Url))
+            {
+                errorMessage = "Stripe session URL was missing.";
+                return;
+            }
+
+            Navigation.NavigateTo(result.Url, forceLoad: true);
+        }
+        catch
+        {
+            errorMessage = "Something went wrong starting checkout.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class CreateCheckoutSessionRequest
+    {
+        public string ProductId { get; set; } = string.Empty;
+    }
+
+    public class CreateCheckoutSessionResponse
+    {
+        public string Url { get; set; } = string.Empty;
+    }
 }

@@ -1,7 +1,113 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>PokeScout</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="ps-home">
+    <div class="ps-bg-orb orb-1"></div>
+    <div class="ps-bg-orb orb-2"></div>
+    <div class="ps-bg-orb orb-3"></div>
 
-Welcome to your new app.
+    <section class="ps-hero">
+        <div class="ps-hero-left">
+            <div class="ps-pill fade-up delay-1">Pokémon TCG • Inventory • Storefront</div>
+
+            <h1 class="fade-up delay-2">
+                Build a Pokémon card platform that actually feels premium.
+            </h1>
+
+            <p class="fade-up delay-3">
+                Search cards, track inventory, showcase products, and power checkout through Stripe.
+                PokeScout is your portfolio app and your side hustle storefront in one place.
+            </p>
+
+            <div class="ps-hero-actions fade-up delay-4">
+                <a href="/catalog" class="ps-btn ps-btn-primary">Explore Catalog</a>
+                <a href="/shop" class="ps-btn ps-btn-secondary">Visit Shop</a>
+            </div>
+
+            <div class="ps-hero-stats fade-up delay-5">
+                <div class="ps-stat-card">
+                    <span>Payments</span>
+                    <strong>Stripe Ready</strong>
+                </div>
+                <div class="ps-stat-card">
+                    <span>Goal</span>
+                    <strong>Clean MVP</strong>
+                </div>
+                <div class="ps-stat-card">
+                    <span>Next</span>
+                    <strong>Orders + Accounts</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="ps-hero-right fade-in delay-4">
+            <div class="ps-showcase-card ps-float-slow">
+                <div class="ps-showcase-top">
+                    <span class="ps-dot red"></span>
+                    <span class="ps-dot yellow"></span>
+                    <span class="ps-dot green"></span>
+                </div>
+
+                <div class="ps-showcase-body">
+                    <div class="ps-showcase-badge">Featured Build</div>
+                    <h3>League Ready Deck</h3>
+                    <p>
+                        A polished storefront card with premium styling, motion, and real checkout flow.
+                    </p>
+
+                    <div class="ps-price-row">
+                        <span class="ps-price">$39.99</span>
+                        <span class="ps-tag">Live Checkout</span>
+                    </div>
+
+                    <div class="ps-mini-grid">
+                        <div class="ps-mini-panel">
+                            <span>Catalog</span>
+                            <strong>Connected</strong>
+                        </div>
+                        <div class="ps-mini-panel">
+                            <span>UI</span>
+                            <strong>Animated</strong>
+                        </div>
+                        <div class="ps-mini-panel">
+                            <span>Shop</span>
+                            <strong>Ready</strong>
+                        </div>
+                        <div class="ps-mini-panel">
+                            <span>Brand</span>
+                            <strong>PokeScout</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ps-feature-section">
+        <div class="ps-section-heading">
+            <span class="ps-section-kicker">What makes it feel real</span>
+            <h2>Professional visual structure beats default templates every time.</h2>
+        </div>
+
+        <div class="ps-feature-grid">
+            <article class="ps-feature-card reveal-card">
+                <div class="ps-icon-wrap">⚡</div>
+                <h3>Animated UX</h3>
+                <p>Smooth fades, floating panels, hover lift, and glowing backgrounds make the site feel alive.</p>
+            </article>
+
+            <article class="ps-feature-card reveal-card">
+                <div class="ps-icon-wrap">🎴</div>
+                <h3>Product-First Layout</h3>
+                <p>Turn your project into a real storefront with strong visual hierarchy and cleaner card presentation.</p>
+            </article>
+
+            <article class="ps-feature-card reveal-card">
+                <div class="ps-icon-wrap">💳</div>
+                <h3>Real Checkout</h3>
+                <p>Stripe integration makes the app feel legitimate instead of just being another demo page.</p>
+            </article>
+        </div>
+    </section>
+</div>
