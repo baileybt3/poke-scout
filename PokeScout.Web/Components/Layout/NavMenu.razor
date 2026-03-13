@@ -1,35 +1,45 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="">PokeScout</a>
+﻿<div class="nav-shell">
+    <div class="brand-shell">
+        <a class="brand-link" href="">
+            <img src="images/pokescout-logo.png" alt="PokeScout logo" class="brand-logo" />
+
+            <div>
+                <div class="brand-title">PokeScout</div>
+                <div class="brand-subtitle">Scout • Track • Sell</div>
+            </div>
+        </a>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <div class="nav-section-label">Navigation</div>
 
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <nav class="nav-stack">
+        <NavLink class="nav-entry" href="" Match="NavLinkMatch.All">
+            <span class="nav-icon">⌂</span>
+            <span>Home</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="cards">
-                <span class="bi bi-grid-fill-nav-menu" aria-hidden="true"></span> Cards
-            </NavLink>
-        </div>
+        <NavLink class="nav-entry" href="cards">
+            <span class="nav-icon">◫</span>
+            <span>Cards</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="catalog">
-                <span class="bi bi-search-heart-fill-nav-menu" aria-hidden="true"></span> Catalog
-            </NavLink>
-        </div>
+        <NavLink class="nav-entry" href="catalog">
+            <span class="nav-icon">⌕</span>
+            <span>Catalog</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="shop">
-                <span class="bi bi-bag-fill-nav-menu" aria-hidden="true"></span> Shop
-            </NavLink>
-        </div>
+        <NavLink class="nav-entry" href="shop">
+            <span class="nav-icon">◈</span>
+            <span>Shop</span>
+        </NavLink>
     </nav>
+
+    <div class="sidebar-status-card">
+        <div class="status-label">Status</div>
+        <div class="status-title">Stripe test mode ready</div>
+        <div class="status-row">
+            <span class="status-dot"></span>
+            <span>Checkout connected</span>
+        </div>
+    </div>
 </div>

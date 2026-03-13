@@ -1,23 +1,25 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<div class="page-shell">
+    <aside class="sidebar-shell">
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <main class="main-shell">
+        <header class="topbar-shell">
+            <div>
+                <div class="topbar-kicker">PokeScout Platform</div>
+                <div class="topbar-subtitle">Pokémon TCG inventory, scouting, and storefront tools</div>
+            </div>
 
-        <article class="content px-4">
+            <div class="topbar-actions">
+                <NavLink class="topbar-chip" href="catalog">Catalog</NavLink>
+                <NavLink class="topbar-chip" href="shop">Shop</NavLink>
+            </div>
+        </header>
+
+        <article class="content-shell">
             @Body
         </article>
     </main>
-</div>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
 </div>

@@ -1,98 +1,120 @@
-.page {
+.page-shell {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    min-height: 100vh;
     position: relative;
-    display: flex;
-    flex-direction: column;
 }
 
-main {
-    flex: 1;
+.sidebar-shell {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 1.25rem;
+    background: linear-gradient(180deg, rgba(5, 11, 24, 0.96), rgba(11, 18, 38, 0.94));
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(18px);
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+.main-shell {
+    min-width: 0;
+    padding: 1.1rem 1.1rem 1.5rem 1.1rem;
 }
 
-.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+.topbar-shell {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 1.1rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+    animation: shellFade 0.7s ease;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
+.topbar-kicker {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 0.3rem;
+}
+
+.topbar-subtitle {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.95rem;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.topbar-chip {
+    padding: 0.72rem 1rem;
+    border-radius: 999px;
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+
+    .topbar-chip:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(94, 160, 255, 0.4);
     }
 
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
+    .topbar-chip.active {
+        background: linear-gradient(135deg, rgba(78, 161, 255, 0.28), rgba(139, 92, 246, 0.28));
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 0 10px 30px rgba(78, 161, 255, 0.18);
     }
 
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
+.content-shell {
+    min-width: 0;
+    animation: shellFade 0.8s ease;
+}
+
+@keyframes shellFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
     }
 
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@media (min-width: 641px) {
-    .page {
-        flex-direction: row;
+@media (max-width: 980px) {
+    .page-shell {
+        grid-template-columns: 1fr;
     }
 
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
+    .sidebar-shell {
+        position: relative;
+        height: auto;
+        padding: 0.75rem;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
+    .main-shell {
+        padding: 0.8rem;
     }
 
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+    .topbar-shell {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
-
-#blazor-error-ui {
-    color-scheme: light only;
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }

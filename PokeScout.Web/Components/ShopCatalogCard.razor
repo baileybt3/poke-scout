@@ -3,42 +3,57 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
-<div class="card h-100 shop-card shadow-sm border-0">
-    <div class="shop-card-image">
+<div class="ps-shop-card">
+    <div class="ps-shop-card-glow"></div>
+
+    <div class="ps-shop-image-wrap">
         @if (!string.IsNullOrWhiteSpace(Item.ImageUrl))
         {
-            <img src="@Item.ImageUrl" alt="@Item.Title" class="img-fluid h-100 w-100 object-fit-cover" />
+            <img src="@Item.ImageUrl" alt="@Item.Title" class="ps-shop-image" />
         }
         else
         {
-            <span>Image coming soon</span>
+            <div class="ps-shop-image-placeholder">
+                <span>No Image Yet</span>
+            </div>
         }
+
+        <div class="ps-shop-tier">@Item.Tier</div>
     </div>
 
-    <div class="card-body d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <h5 class="card-title mb-0">@Item.Title</h5>
-            <span class="badge bg-dark">@Item.Tier</span>
+    <div class="ps-shop-body">
+        <div class="ps-shop-title-row">
+            <h3>@Item.Title</h3>
+            <span class="ps-shop-stock">Stock: @Item.StockCount</span>
         </div>
 
-        <p class="text-muted mb-3">@Item.Description</p>
+        <p class="ps-shop-description">@Item.Description</p>
 
-        <div class="small mb-3">
-            <div><strong>Condition:</strong> @Item.Condition</div>
-            <div><strong>Stock:</strong> @Item.StockCount</div>
+        <div class="ps-shop-meta">
+            <div class="ps-meta-pill">
+                <span class="ps-meta-label">Condition</span>
+                <strong>@Item.Condition</strong>
+            </div>
+
+            <div class="ps-meta-pill">
+                <span class="ps-meta-label">Checkout</span>
+                <strong>@(Item.IsStripeReady ? "Stripe Ready" : "Coming Soon")</strong>
+            </div>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <div class="alert alert-danger py-2 px-3 mb-3">
+            <div class="ps-shop-error">
                 @errorMessage
             </div>
         }
 
-        <div class="mt-auto d-flex justify-content-between align-items-center">
-            <span class="fw-bold fs-5">$@Item.Price.ToString("0.00")</span>
+        <div class="ps-shop-footer">
+            <div class="ps-shop-price">
+                $@Item.Price.ToString("0.00")
+            </div>
 
-            <button class="btn btn-primary"
+            <button class="ps-shop-button"
                     @onclick="StartCheckoutAsync"
                     disabled="@(!Item.IsStripeReady || isLoading)">
                 @(isLoading ? "Redirecting..." : Item.ButtonText)

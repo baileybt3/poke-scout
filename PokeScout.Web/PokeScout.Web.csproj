@@ -10,4 +10,8 @@
     <ProjectReference Include="..\PokeScout.Core\PokeScout.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,82 @@
+﻿.ps-shop-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: psShopFade 0.7s ease;
+}
+
+.ps-shop-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 1.75rem;
+    border-radius: 28px;
+    background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.18), transparent 28%), radial-gradient(circle at bottom left, rgba(78, 161, 255, 0.14), transparent 30%), linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.24);
+    backdrop-filter: blur(16px);
+}
+
+.ps-shop-kicker {
+    margin-bottom: 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #93c5fd;
+}
+
+.ps-shop-hero h1 {
+    margin: 0 0 0.75rem 0;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.02;
+}
+
+.ps-shop-hero p {
+    margin: 0;
+    max-width: 720px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+.ps-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+}
+
+.ps-shop-state-card,
+.ps-shop-error-card {
+    padding: 1rem 1.1rem;
+    border-radius: 20px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.22);
+}
+
+.ps-shop-state-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+    .ps-shop-state-card p {
+        margin: 0;
+        color: rgba(255,255,255,0.78);
+    }
+
+.ps-shop-error-card {
+    color: #ffd6d6;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.24);
+}
+
+@keyframes psShopFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
