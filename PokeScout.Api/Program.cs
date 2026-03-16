@@ -17,19 +17,24 @@ builder.Services
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-//Register service in DI
+// Register service in DI
 builder.Services.AddScoped<ICardService, EfCardService>();
+
+// PokeWallet config
+var pokeWalletBaseUrl = builder.Configuration["PokemonWallet:BaseUrl"] ?? "https://api.pokewallet.io/";
+var pokeWalletApiKey = builder.Configuration["PokemonWallet:ApiKey"];
+
+if (string.IsNullOrWhiteSpace(pokeWalletApiKey))
+{
+    throw new InvalidOperationException(
+        "Missing PokemonWallet:ApiKey in PokeScout.Api/appsettings.Development.json");
+}
 
 // API Service registration
 builder.Services.AddHttpClient<IPokemonCatalogService, PokemonCatalogService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.pokewallet.io/");
-
-    var apiKey = builder.Configuration["PokeWallet:ApiKey"];
-    if (!string.IsNullOrWhiteSpace(apiKey))
-    {
-        client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
-    }
+    client.BaseAddress = new Uri(pokeWalletBaseUrl);
+    client.DefaultRequestHeaders.Add("X-API-Key", pokeWalletApiKey);
 });
 
 // Generates /openapi/v1.json
@@ -67,8 +72,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(); // /scalar
-    app.UseCors("WebDev");
+    app.MapScalarApiReference();
     app.UseCors("DevCors");
 }
 
