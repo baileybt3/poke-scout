@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager Navigation
 
 <div class="page-shell">
     <input id="sidebar-toggle" class="sidebar-toggle-input" type="checkbox" />
@@ -13,25 +15,32 @@
     </label>
 
     <main class="main-shell">
-        <header class="topbar-shell">
-            <div class="topbar-left">
-                <label for="sidebar-toggle"
-                       class="menu-toggle"
-                       aria-label="Toggle navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </label>
+        <header class="app-header">
+            <div class="topbar-shell">
+                <div class="topbar-row">
+                    <label for="sidebar-toggle"
+                           class="menu-toggle"
+                           aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </label>
 
-                <div>
-                    <div class="topbar-kicker">PokeScout Platform</div>
-                    <div class="topbar-subtitle">Pokémon TCG inventory, scouting, and storefront tools</div>
+                    <div class="topbar-right-placeholder"></div>
                 </div>
-            </div>
 
-            <div class="topbar-actions">
-                <NavLink class="topbar-chip" href="catalog">Catalog</NavLink>
-                <NavLink class="topbar-chip" href="shop">Shop</NavLink>
+                <a href="/" class="center-logo-link" aria-label="Go to home page">
+                    <span class="center-logo-badge">PS</span>
+                </a>
+
+                <form class="search-shell" method="get" action="/catalog">
+                    <span class="search-icon">⌕</span>
+                    <input class="global-search-input"
+                           type="search"
+                           name="search"
+                           value="@CurrentSearchValue"
+                           placeholder="Search cards, sets, decks, or products" />
+                </form>
             </div>
         </header>
 
@@ -40,3 +49,21 @@
         </article>
     </main>
 </div>
+
+@code {
+    private string CurrentSearchValue
+    {
+        get
+        {
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+
+            if (query.TryGetValue("search", out var value))
+            {
+                return value.ToString();
+            }
+
+            return string.Empty;
+        }
+    }
+}
