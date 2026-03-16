@@ -1,15 +1,32 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page-shell">
+    <input id="sidebar-toggle" class="sidebar-toggle-input" type="checkbox" />
+
     <aside class="sidebar-shell">
         <NavMenu />
     </aside>
 
+    <label for="sidebar-toggle"
+           class="sidebar-backdrop"
+           aria-label="Close sidebar">
+    </label>
+
     <main class="main-shell">
         <header class="topbar-shell">
-            <div>
-                <div class="topbar-kicker">PokeScout Platform</div>
-                <div class="topbar-subtitle">Pokémon TCG inventory, scouting, and storefront tools</div>
+            <div class="topbar-left">
+                <label for="sidebar-toggle"
+                       class="menu-toggle"
+                       aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </label>
+
+                <div>
+                    <div class="topbar-kicker">PokeScout Platform</div>
+                    <div class="topbar-subtitle">Pokémon TCG inventory, scouting, and storefront tools</div>
+                </div>
             </div>
 
             <div class="topbar-actions">
