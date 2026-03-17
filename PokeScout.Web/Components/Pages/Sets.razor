@@ -1,0 +1,239 @@
+﻿@page "/sets"
+@inject NavigationManager Navigation
+
+<PageTitle>Sets</PageTitle>
+
+<div class="sets-browser">
+    <div class="sets-header-row">
+        <div class="sets-header-copy">
+            <h1>Browse Sets</h1>
+            <p>
+                Explore Pokémon TCG sets from newest to oldest. Click a set to view its cards.
+            </p>
+        </div>
+
+        <button class="sets-back-link" @onclick="GoBackToCatalog">
+            ← Back
+        </button>
+    </div>
+
+    @foreach (var series in GroupedSets)
+    {
+        <section class="series-section">
+            <h2 class="series-title">@series.Key</h2>
+
+            <div class="series-grid">
+                @foreach (var set in series)
+                {
+                    <button class="set-tile" @onclick="() => OpenSet(set)">
+                        <div class="set-logo-box">
+                            @if (!string.IsNullOrWhiteSpace(set.ImageFileName))
+                            {
+                                <img src="@GetSetImagePath(set.ImageFileName)"
+                                     alt="@set.Name"
+                                     class="set-logo"
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.nextElementSibling.classList.add('show');" />
+                            }
+
+                            <div class="set-logo-fallback @(string.IsNullOrWhiteSpace(set.ImageFileName) ? "show" : "")">
+                                @set.Name
+                            </div>
+                        </div>
+
+                        <div class="set-tile-body">
+                            <div class="set-name">@set.Name</div>
+
+                            <div class="set-detail-line">
+                                <span>@set.ReleaseDateText</span>
+                                @if (!string.IsNullOrWhiteSpace(set.Code))
+                                {
+                                    <span>•</span>
+                                    <span>@set.Code</span>
+                                }
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private IEnumerable<IGrouping<string, LocalSetItem>> GroupedSets =>
+        AllSets
+            .OrderBy(s => s.SeriesSortOrder)
+            .ThenByDescending(s => s.ReleaseDate)
+            .GroupBy(s => s.Series);
+
+    private void GoBackToCatalog()
+    {
+        Navigation.NavigateTo("/catalog");
+    }
+
+    private void OpenSet(LocalSetItem set)
+    {
+        // Change this route if your SetCards page uses a different URL.
+        Navigation.NavigateTo($"/setcards/{set.Slug}");
+    }
+
+    private static string GetSetImagePath(string fileName)
+    {
+        return $"/images/sets/{fileName}";
+    }
+
+    private sealed class LocalSetItem
+    {
+        public string Name { get; init; } = "";
+        public string Series { get; init; } = "";
+        public int SeriesSortOrder { get; init; }
+        public DateTime ReleaseDate { get; init; }
+        public string ReleaseDateText => ReleaseDate.ToString("MMM d, yyyy");
+        public string Code { get; init; } = "";
+        public string Slug { get; init; } = "";
+        public string ImageFileName { get; init; } = "";
+    }
+
+    private readonly List<LocalSetItem> AllSets = new()
+    {
+        // =========================================================
+        // TEMPLATE:
+        // Copy this block and edit the values for each new set.
+        // =========================================================
+        // new LocalSetItem
+        // {
+        //     Name = "SET NAME HERE",
+        //     Series = "SERIES NAME HERE",
+        //     SeriesSortOrder = 1,
+        //     ReleaseDate = new DateTime(2025, 1, 1),
+        //     Code = "optional-code",
+        //     Slug = "set-name-slug",
+        //     ImageFileName = "your-image-file.webp"
+        // },
+
+        // =========================================================
+        // SCARLET & VIOLET
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Journey Together",
+            Series = "Scarlet & Violet",
+            SeriesSortOrder = 1,
+            ReleaseDate = new DateTime(2025, 3, 28),
+            Code = "SV9",
+            Slug = "journey-together",
+            ImageFileName = "journey-together.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Prismatic Evolutions",
+            Series = "Scarlet & Violet",
+            SeriesSortOrder = 1,
+            ReleaseDate = new DateTime(2025, 1, 17),
+            Code = "SV8.5",
+            Slug = "prismatic-evolutions",
+            ImageFileName = "prismatic-evolutions.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Surging Sparks",
+            Series = "Scarlet & Violet",
+            SeriesSortOrder = 1,
+            ReleaseDate = new DateTime(2024, 11, 8),
+            Code = "SV8",
+            Slug = "surging-sparks",
+            ImageFileName = "surging-sparks.webp"
+        },
+
+        // =========================================================
+        // SWORD & SHIELD
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Silver Tempest",
+            Series = "Sword & Shield",
+            SeriesSortOrder = 2,
+            ReleaseDate = new DateTime(2022, 11, 11),
+            Code = "SWSH12",
+            Slug = "silver-tempest",
+            ImageFileName = "silver-tempest.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Lost Origin",
+            Series = "Sword & Shield",
+            SeriesSortOrder = 2,
+            ReleaseDate = new DateTime(2022, 9, 9),
+            Code = "SWSH11",
+            Slug = "lost-origin",
+            ImageFileName = "lost-origin.webp"
+        },
+
+        // =========================================================
+        // SUN & MOON
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Cosmic Eclipse",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 11, 1),
+            Code = "SM12",
+            Slug = "cosmic-eclipse",
+            ImageFileName = "cosmic-eclipse.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Hidden Fates",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "hidden-fates",
+            ImageFileName = "hidden-fates.webp"
+        },
+
+        // =========================================================
+        // XY
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Evolutions",
+            Series = "XY",
+            SeriesSortOrder = 4,
+            ReleaseDate = new DateTime(2016, 11, 2),
+            Code = "XY12",
+            Slug = "evolutions",
+            ImageFileName = "evolutions.webp"
+        },
+
+        // =========================================================
+        // BLACK & WHITE
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Plasma Storm",
+            Series = "Black & White",
+            SeriesSortOrder = 5,
+            ReleaseDate = new DateTime(2013, 2, 6),
+            Code = "BW8",
+            Slug = "plasma-storm",
+            ImageFileName = "plasma-storm.webp"
+        },
+
+        // =========================================================
+        // HEARTGOLD & SOULSILVER
+        // =========================================================
+        new LocalSetItem
+        {
+            Name = "Undaunted",
+            Series = "HeartGold & SoulSilver",
+            SeriesSortOrder = 6,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "HS3",
+            Slug = "undaunted",
+            ImageFileName = "undaunted.webp"
+        }
+    };
+}

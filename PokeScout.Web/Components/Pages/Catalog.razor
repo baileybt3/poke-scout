@@ -5,46 +5,451 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
-<h3>Catalog Search</h3>
+<PageTitle>Cards</PageTitle>
 
-<form style="display:flex; gap:8px; margin-bottom:16px;" @onsubmit="HandleSubmitAsync" @onsubmit:preventDefault>
-    <input @bind="searchTerm" placeholder="Search Pokémon card name" />
-    <button type="submit">Search</button>
-</form>
+<div class="catalog-page">
+    <section class="catalog-hero">
+        <div class="catalog-hero-copy">
+            <div class="catalog-eyebrow">Pokémon Catalog</div>
+            <h1>Cards</h1>
+            <p>
+                Search for any Pokémon card or open the full set browser to explore every expansion in order.
+            </p>
 
-@if (isLoading)
-{
-    <p>Loading...</p>
-}
-else if (!string.IsNullOrWhiteSpace(error))
-{
-    <p style="color:darkred;">@error</p>
-}
-else if (results is not null && results.Count == 0)
-{
-    <p>No results found.</p>
-}
-else if (results is not null)
-{
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; margin-bottom:40px;">
-        @foreach (var card in results)
+            <div class="catalog-hero-actions">
+                <button type="button" class="primary-action" @onclick="GoToSetsPage">
+                    Browse All Sets
+                </button>
+
+                <button type="button" class="secondary-action" @onclick="GoToMyCardsPage">
+                    Go to My Cards
+                </button>
+            </div>
+        </div>
+
+        <div class="catalog-hero-panel">
+            <div class="hero-panel-title">What you can do here</div>
+
+            <div class="hero-panel-list">
+                <div class="hero-panel-item">
+                    <span class="hero-badge">1</span>
+                    <span>Search by Pokémon name</span>
+                </div>
+
+                <div class="hero-panel-item">
+                    <span class="hero-badge">2</span>
+                    <span>Open every set in chronological order</span>
+                </div>
+
+                <div class="hero-panel-item">
+                    <span class="hero-badge">3</span>
+                    <span>View all cards inside a selected set</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalog-search-shell">
+        <div class="catalog-search-header">
+            <div>
+                <h2>Quick Search</h2>
+                <p>Find a card fast, or browse the full set explorer.</p>
+            </div>
+
+            @if (results is not null && !isLoading && string.IsNullOrWhiteSpace(error))
+            {
+                <div class="results-pill">
+                    @results.Count result@(results.Count == 1 ? "" : "s")
+                </div>
+            }
+        </div>
+
+        <form class="catalog-search-form"
+              @onsubmit="HandleSubmitAsync"
+              @onsubmit:preventDefault>
+            <input @bind="searchTerm"
+                   class="catalog-search-input"
+                   placeholder="Search Pokémon card name..." />
+
+            <button type="submit" class="catalog-search-button" disabled="@isLoading">
+                @(isLoading ? "Searching..." : "Search")
+            </button>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(error))
         {
-            <div style="border:1px solid #ccc; border-radius:12px; padding:12px;">
-                @if (!string.IsNullOrWhiteSpace(card.ImageUrl))
-                {
-                    <img src="@GetImageUrl(card.ImageUrl)"
-                         alt="@card.Name"
-                         style="width:100%; border-radius:8px; margin-bottom:8px;" />
-                }
-
-                <h4 style="margin:0 0 8px 0;">@card.Name</h4>
-                <p style="margin:4px 0;"><strong>Set:</strong> @card.SetName</p>
-                <p style="margin:4px 0;"><strong>Rarity:</strong> @card.Rarity</p>
-                <p style="margin:4px 0;"><strong>Price:</strong> @(card.MarketPrice?.ToString("C") ?? "N/A")</p>
+            <div class="catalog-message error">
+                @error
             </div>
         }
-    </div>
-}
+        else if (isLoading)
+        {
+            <div class="catalog-loading-grid">
+                @for (var i = 0; i < 8; i++)
+                {
+                    <div class="catalog-skeleton-card"></div>
+                }
+            </div>
+        }
+        else if (results is not null && results.Count == 0)
+        {
+            <div class="catalog-message">
+                No results found.
+            </div>
+        }
+        else if (results is not null)
+        {
+            <div class="catalog-results-grid">
+                @foreach (var card in results)
+                {
+                    <article class="catalog-card">
+                        <div class="catalog-card-image-wrap">
+                            @if (!string.IsNullOrWhiteSpace(card.ImageUrl))
+                            {
+                                <img src="@GetImageUrl(card.ImageUrl)"
+                                     alt="@card.Name"
+                                     class="catalog-card-image" />
+                            }
+                        </div>
+
+                        <div class="catalog-card-body">
+                            <div class="catalog-card-set">@card.SetName</div>
+                            <h3>@card.Name</h3>
+
+                            <div class="catalog-card-meta">
+                                @if (!string.IsNullOrWhiteSpace(card.Rarity))
+                                {
+                                    <span>@card.Rarity</span>
+                                }
+
+                                @if (card.MarketPrice.HasValue)
+                                {
+                                    <span>@card.MarketPrice.Value.ToString("C")</span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(card.TcgPlayerUrl))
+                            {
+                                <a class="catalog-card-link"
+                                   href="@card.TcgPlayerUrl"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    View Market Link
+                                </a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<style>
+    .catalog-page {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .catalog-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.9fr);
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+    }
+
+    .catalog-hero-copy h1 {
+        margin: 0 0 0.65rem 0;
+    }
+
+    .catalog-eyebrow {
+        margin-bottom: 0.55rem;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #8fb9ff;
+    }
+
+    .catalog-hero-copy p {
+        margin: 0;
+        max-width: 700px;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.76);
+    }
+
+    .catalog-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        margin-top: 1.2rem;
+    }
+
+    .primary-action,
+    .secondary-action,
+    .catalog-search-button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.85rem 1.15rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+    }
+
+    .primary-action {
+        background: linear-gradient(135deg, #4f8cff, #7a5cff);
+        color: white;
+    }
+
+    .secondary-action {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+        .primary-action:hover,
+        .secondary-action:hover,
+        .catalog-search-button:hover {
+            transform: translateY(-1px);
+        }
+
+    .catalog-hero-panel {
+        padding: 1.1rem;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .hero-panel-title {
+        margin-bottom: 0.9rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #dbeafe;
+    }
+
+    .hero-panel-list {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .hero-panel-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: rgba(255, 255, 255, 0.76);
+    }
+
+    .hero-badge {
+        width: 1.8rem;
+        height: 1.8rem;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: white;
+        background: linear-gradient(135deg, rgba(79, 140, 255, 0.8), rgba(122, 92, 255, 0.8));
+        flex-shrink: 0;
+    }
+
+    .catalog-search-shell {
+        padding: 1.35rem;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .catalog-search-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+        .catalog-search-header h2 {
+            margin: 0 0 0.35rem 0;
+        }
+
+        .catalog-search-header p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+    .results-pill {
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #dbeafe;
+        background: rgba(79, 140, 255, 0.14);
+        border: 1px solid rgba(79, 140, 255, 0.2);
+        white-space: nowrap;
+    }
+
+    .catalog-search-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .catalog-search-input {
+        flex: 1;
+        min-width: 240px;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        outline: none;
+    }
+
+        .catalog-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.48);
+        }
+
+        .catalog-search-input:focus {
+            border-color: rgba(79, 140, 255, 0.55);
+            box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.12);
+        }
+
+    .catalog-search-button {
+        padding-inline: 1.3rem;
+        background: #5a67d8;
+        color: white;
+    }
+
+        .catalog-search-button:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+        }
+
+    .catalog-message {
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+        .catalog-message.error {
+            color: #ff9c9c;
+        }
+
+    .catalog-loading-grid,
+    .catalog-results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .catalog-skeleton-card {
+        height: 360px;
+        border-radius: 22px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .catalog-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+        .catalog-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(79, 140, 255, 0.26);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+    .catalog-card-image-wrap {
+        padding: 0.95rem;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .catalog-card-image {
+        width: 100%;
+        display: block;
+        border-radius: 16px;
+    }
+
+    .catalog-card-body {
+        display: grid;
+        gap: 0.65rem;
+        padding: 1rem;
+    }
+
+    .catalog-card-set {
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8fb9ff;
+    }
+
+    .catalog-card-body h3 {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.35;
+    }
+
+    .catalog-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+        .catalog-card-meta span {
+            padding: 0.35rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.76);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+    .catalog-card-link {
+        color: #9ec2ff;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .catalog-card-link:hover {
+            text-decoration: underline;
+        }
+
+    @@media (max-width: 900px) {
+        .catalog-hero
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    }
+
+    @@media (max-width: 640px) {
+        .catalog-search-header
+
+    {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .primary-action,
+    .secondary-action,
+    .catalog-search-button {
+        width: 100%;
+    }
+
+    }
+</style>
 
 @code {
     private const string ApiBaseUrl = "https://localhost:7034";
@@ -112,6 +517,16 @@ else if (results is not null)
         {
             isLoading = false;
         }
+    }
+
+    private void GoToSetsPage()
+    {
+        Navigation.NavigateTo("/sets");
+    }
+
+    private void GoToMyCardsPage()
+    {
+        Navigation.NavigateTo("/cards");
     }
 
     private static string GetImageUrl(string imageUrl)
