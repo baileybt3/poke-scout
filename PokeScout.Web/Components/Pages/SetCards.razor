@@ -1,139 +1,264 @@
-﻿.sets-page {
-    display: grid;
-    gap: 1.5rem;
-}
+﻿@page "/setcards/{SetId}"
+@rendermode InteractiveServer
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
-.sets-hero {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.5rem;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
+<PageTitle>@PageTitle</PageTitle>
 
-.sets-eyebrow {
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #8fb9ff;
-    margin-bottom: 0.5rem;
-}
+<div class="set-cards-page">
+    <section class="set-cards-hero">
+        <div>
+            <div class="set-cards-eyebrow">Set Browser</div>
+            <h1>@Heading</h1>
+            <p>@Subheading</p>
+        </div>
 
-.sets-hero h1 {
-    margin: 0 0 0.5rem 0;
-}
+        <button class="back-button" type="button" @onclick="GoBack">
+            ← Back to Sets
+        </button>
+    </section>
 
-.sets-hero p {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.72);
-    line-height: 1.6;
-    max-width: 720px;
-}
+    <div class="set-toolbar">
+        <input class="set-toolbar-input"
+               @bind="searchTerm"
+               @bind:event="oninput"
+               placeholder="Search card name..." />
 
-.back-button {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    border-radius: 999px;
-    padding: 0.85rem 1.15rem;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-}
+        <select class="set-toolbar-select" @bind="selectedSort">
+            <option value="number">Card Number</option>
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="rarity">Rarity</option>
+            <option value="price-asc">Price Low → High</option>
+            <option value="price-desc">Price High → Low</option>
+        </select>
 
-.back-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
+        <select class="set-toolbar-select" @bind="selectedRarity">
+            <option value="">All Rarities</option>
+            @foreach (var rarity in AvailableRarities)
+            {
+                <option value="@rarity">@rarity</option>
+            }
+        </select>
 
-.sets-message {
-    padding: 1rem 1.25rem;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
+        @if (!string.IsNullOrWhiteSpace(searchTerm) || !string.IsNullOrWhiteSpace(selectedRarity) || selectedSort != "number")
+        {
+            <button class="set-toolbar-clear" type="button" @onclick="ClearFilters">
+                Reset
+            </button>
+        }
+    </div>
 
-.sets-message.error {
-    color: #ff9b9b;
-}
+    @if (isLoading)
+    {
+        <div class="set-cards-message">Loading cards...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="set-cards-message error">@error</div>
+    }
+    else if (FilteredCards.Count == 0)
+    {
+        <div class="set-cards-message">No cards matched your filters.</div>
+    }
+    else
+    {
+        <div class="set-cards-message">
+            Showing <strong>@FilteredCards.Count</strong> of <strong>@allCards.Count</strong> cards.
+        </div>
 
-.sets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1rem;
-}
+        <div class="cards-grid">
+            @foreach (var card in FilteredCards)
+            {
+                <article class="card-tile">
+                    <div class="card-image-wrap">
+                        <img class="card-image"
+                             src="@card.ImageUrl"
+                             alt="@card.Name"
+                             loading="lazy" />
+                    </div>
 
-.set-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    text-align: left;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 22px;
-    padding: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-}
+                    <div class="card-info">
+                        <p class="card-number">#@card.Number</p>
+                        <h3>@card.Name</h3>
 
-.set-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(102, 126, 234, 0.5);
-    background: rgba(255, 255, 255, 0.07);
-}
+                        <div class="card-meta">
+                            @if (!string.IsNullOrWhiteSpace(card.Rarity))
+                            {
+                                <span>@card.Rarity</span>
+                            }
 
-.set-image-wrap {
-    height: 130px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
+                            @if (card.MarketPrice is not null)
+                            {
+                                <span>@card.MarketPrice.Value.ToString("C")</span>
+                            }
+                        </div>
 
-.set-image {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    display: block;
-}
+                        @if (!string.IsNullOrWhiteSpace(card.TcgPlayerUrl))
+                        {
+                            <a class="card-link"
+                               href="@card.TcgPlayerUrl"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                View market
+                            </a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
 
-.set-image-fallback {
-    padding: 1rem;
-    text-align: center;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.8);
-}
+@code {
+    [Parameter]
+    public string SetId { get; set; } = "";
 
-.set-info h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1rem;
-}
+    private readonly List<SetCardItem> allCards = [];
+    private bool isLoading = true;
+    private string? error;
+    private string searchTerm = "";
+    private string selectedSort = "number";
+    private string selectedRarity = "";
+    private string setName = "";
 
-.set-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-}
+    private string PageTitle =>
+        string.IsNullOrWhiteSpace(setName) ? "Set Cards" : $"{setName} Cards";
 
-.set-meta span {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.72);
-    padding: 0.35rem 0.55rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.06);
-}
+    private string Heading =>
+        string.IsNullOrWhiteSpace(setName) ? "Set Cards" : setName;
 
-@@media (max-width: 720px) {
-    .sets-hero {
-        flex-direction: column;
+    private string Subheading =>
+        allCards.Count == 0
+            ? "Browse cards from this Pokémon TCG set."
+            : $"{allCards.Count} cards loaded from this set.";
+
+    private List<string> AvailableRarities =>
+        allCards
+            .Select(x => x.Rarity?.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .Cast<string>()
+            .ToList();
+
+    private List<SetCardItem> FilteredCards => ApplyFiltersAndSort();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadCardsAsync();
     }
 
-    .back-button {
-        width: 100%;
+    private async Task LoadCardsAsync()
+    {
+        isLoading = true;
+        error = null;
+        setName = "";
+        allCards.Clear();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(SetId))
+            {
+                error = "No set was selected.";
+                return;
+            }
+
+            var url = $"/api/catalog/sets/{Uri.EscapeDataString(SetId)}/cards";
+            var cards = await Http.GetFromJsonAsync<List<SetCardItem>>(url);
+
+            if (cards is null || cards.Count == 0)
+            {
+                error = "No cards were returned for this set.";
+                return;
+            }
+
+            allCards.AddRange(cards);
+            setName = allCards[0].SetName;
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load set cards: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<SetCardItem> ApplyFiltersAndSort()
+    {
+        IEnumerable<SetCardItem> query = allCards;
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(card =>
+                !string.IsNullOrWhiteSpace(card.Name) &&
+                card.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedRarity))
+        {
+            query = query.Where(card =>
+                string.Equals(card.Rarity, selectedRarity, StringComparison.OrdinalIgnoreCase));
+        }
+
+        query = selectedSort switch
+        {
+            "name-asc" => query.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase),
+            "name-desc" => query.OrderByDescending(x => x.Name, StringComparer.OrdinalIgnoreCase),
+            "rarity" => query.OrderBy(x => x.Rarity, StringComparer.OrdinalIgnoreCase)
+                             .ThenBy(x => ParseCardNumber(x.Number))
+                             .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase),
+            "price-asc" => query.OrderBy(x => x.MarketPrice ?? decimal.MaxValue)
+                                .ThenBy(x => ParseCardNumber(x.Number))
+                                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase),
+            "price-desc" => query.OrderByDescending(x => x.MarketPrice ?? decimal.MinValue)
+                                 .ThenBy(x => ParseCardNumber(x.Number))
+                                 .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase),
+            _ => query.OrderBy(x => ParseCardNumber(x.Number))
+                      .ThenBy(x => x.Number, StringComparer.OrdinalIgnoreCase)
+                      .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        };
+
+        return query.ToList();
+    }
+
+    private static int ParseCardNumber(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return int.MaxValue;
+
+        var leftSide = value.Split('/')[0];
+        var digits = new string(leftSide.TakeWhile(char.IsDigit).ToArray());
+
+        return int.TryParse(digits, out var parsed) ? parsed : int.MaxValue;
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = "";
+        selectedSort = "number";
+        selectedRarity = "";
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/sets");
+    }
+
+    private sealed class SetCardItem
+    {
+        public string ExternalId { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+        public string SetId { get; set; } = "";
+        public string SetName { get; set; } = "";
+        public string Series { get; set; } = "";
+        public string Number { get; set; } = "";
+        public string Rarity { get; set; } = "";
+        public decimal? MarketPrice { get; set; }
+        public string TcgPlayerUrl { get; set; } = "";
     }
 }
