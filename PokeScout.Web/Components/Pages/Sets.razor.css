@@ -128,26 +128,37 @@
         display: flex;
     }
 
-.set-tile-body {
-    display: grid;
-    gap: 0.45rem;
-}
-
-.set-name {
-    font-size: 0.98rem;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #111827;
-}
-
-.set-detail-line {
+.set-meta-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    color: #64748b;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    min-height: 18px;
+    flex-wrap: nowrap;
+}
+
+.set-release-date {
     font-size: 0.78rem;
     font-weight: 600;
+    color: #64748b;
+    line-height: 1;
+    margin: 0;
 }
+
+.set-expansion-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 24px;
+    min-height: 24px;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+    .set-expansion-icon.placeholder {
+        background: transparent;
+    }
 
 @media (max-width: 720px) {
     .sets-browser {

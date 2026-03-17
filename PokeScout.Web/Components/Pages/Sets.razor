@@ -25,9 +25,13 @@
             <div class="series-grid">
                 @foreach (var set in series)
                 {
-                    <button class="set-tile" @onclick="() => OpenSet(set)">
+                    <button class="set-tile"
+                            type="button"
+                            title="@set.Name"
+                            aria-label="@($"Open {set.Name}")"
+                            @onclick="() => OpenSet(set)">
                         <div class="set-logo-box">
-                            @if (!string.IsNullOrWhiteSpace(set.ImageFileName))
+                            @if (set.HasImage)
                             {
                                 <img src="@GetSetImagePath(set.ImageFileName)"
                                      alt="@set.Name"
@@ -36,22 +40,25 @@
                                      onerror="this.style.display='none'; this.nextElementSibling.classList.add('show');" />
                             }
 
-                            <div class="set-logo-fallback @(string.IsNullOrWhiteSpace(set.ImageFileName) ? "show" : "")">
+                            <div class="set-logo-fallback @(!set.HasImage ? "show" : "")">
                                 @set.Name
                             </div>
                         </div>
 
-                        <div class="set-tile-body">
-                            <div class="set-name">@set.Name</div>
+                        <div class="set-meta-row">
+                            <span class="set-release-date">@set.ReleaseDateText</span>
 
-                            <div class="set-detail-line">
-                                <span>@set.ReleaseDateText</span>
-                                @if (!string.IsNullOrWhiteSpace(set.Code))
-                                {
-                                    <span>•</span>
-                                    <span>@set.Code</span>
-                                }
-                            </div>
+                            @if (!string.IsNullOrWhiteSpace(set.IconFileName))
+                            {
+                                <img src="@GetSetIconPath(set.IconFileName)"
+                                     alt="@($"{set.Name} icon")"
+                                     class="set-expansion-icon"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="set-expansion-icon placeholder" aria-hidden="true"></div>
+                            }
                         </div>
                     </button>
                 }
@@ -65,6 +72,7 @@
         AllSets
             .OrderBy(s => s.SeriesSortOrder)
             .ThenByDescending(s => s.ReleaseDate)
+            .ThenBy(s => s.Name)
             .GroupBy(s => s.Series);
 
     private void GoBackToCatalog()
@@ -74,13 +82,17 @@
 
     private void OpenSet(LocalSetItem set)
     {
-        // Change this route if your SetCards page uses a different URL.
         Navigation.NavigateTo($"/setcards/{set.Slug}");
     }
 
     private static string GetSetImagePath(string fileName)
     {
         return $"/images/sets/{fileName}";
+    }
+
+    private static string GetSetIconPath(string fileName)
+    {
+        return $"/images/set-icons/{fileName}";
     }
 
     private sealed class LocalSetItem
@@ -93,42 +105,48 @@
         public string Code { get; init; } = "";
         public string Slug { get; init; } = "";
         public string ImageFileName { get; init; } = "";
+        public string IconFileName { get; init; } = ""; // Put your AVIF/WEBP/PNG icon file name here.
+        public bool HasImage => !string.IsNullOrWhiteSpace(ImageFileName);
     }
 
     private readonly List<LocalSetItem> AllSets = new()
     {
+
         // =========================================================
         // Mega Evolution
         // =========================================================
         new LocalSetItem
         {
-            Name = "Mega Evolution",
+            Name = "Chaos Rising",
             Series = "Mega Evolution",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
-            Slug = "mega-evolution",
-            ImageFileName = "mega-evolution-chaos-rising.webp"
+            Slug = "mega-evolution-chaos-rising",
+            ImageFileName = "mega-evolution-chaos-rising.webp",
+            IconFileName = ""
         },
         new LocalSetItem
         {
-            Name = "Mega Evolution",
+            Name = "Perfect Order",
             Series = "Mega Evolution",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
-            Slug = "mega-evolution",
-            ImageFileName = "mega-evolution-perfect-order.webp"
+            Slug = "mega-evolution-perfect-order",
+            ImageFileName = "mega-evolution-perfect-order.webp",
+            IconFileName = ""
         },
         new LocalSetItem
         {
-            Name = "Ascended Heros",
+            Name = "Ascended Heroes",
             Series = "Mega Evolution",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2026, 1, 30),
             Code = "",
-            Slug = "ascended-heros",
-            ImageFileName = "mega-evolution-ascended-heros.webp"
+            Slug = "mega-evolution-ascended-heros",
+            ImageFileName = "mega-evolution-ascended-heros.webp",
+            IconFileName = "156_ascended_heroes_set_logo.webp"
         },
         new LocalSetItem
         {
@@ -137,8 +155,9 @@
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
-            Slug = "mega-evolution",
-            ImageFileName = "mega-evolution-phantasmal-flames.webp"
+            Slug = "mega-evolution-phantasmal-flames",
+            ImageFileName = "mega-evolution-phantasmal-flames.webp",
+            IconFileName = "155_phantasmal_flames_set_logo.avif"
         },
         new LocalSetItem
         {
@@ -148,31 +167,56 @@
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
             Slug = "mega-evolution",
-            ImageFileName = "mega-evolution.webp"
+            ImageFileName = "mega-evolution.webp",
+            IconFileName = "154_mega_evolution_set_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Mega Evolution",
+            Name = "Mega Evolution Promos",
             Series = "Mega Evolution",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
-            Slug = "mega-evolution",
-            ImageFileName = "mega-evolution-promos.webp"
+            Slug = "mega-evolution-promos",
+            ImageFileName = "mega-evolution-promos.webp",
+            IconFileName = "153_mega_evolution_promos_set_logo.webp"
         },
 
         // =========================================================
-        // SCARLET & VIOLET
+        // Scarlet & Violet
         // =========================================================
         new LocalSetItem
         {
-            Name = "Journey Together",
+            Name = "Black Bolt",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 3, 28),
             Code = "SV9",
-            Slug = "journey-together",
-            ImageFileName = "scarlet-and-violet-black-bolt.webp"
+            Slug = "scarlet-and-violet-black-bolt",
+            ImageFileName = "scarlet-and-violet-black-bolt.webp",
+            IconFileName = "151_black_bolt_logo.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "White Flare",
+            Series = "Scarlet & Violet",
+            SeriesSortOrder = 1,
+            ReleaseDate = new DateTime(2025, 3, 28),
+            Code = "SV9",
+            Slug = "scarlet-and-violet-white-flare",
+            ImageFileName = "scarlet-and-violet-white-flare.webp",
+            IconFileName = "152_white_flare_logo.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Destined Rivals",
+            Series = "Scarlet & Violet",
+            SeriesSortOrder = 1,
+            ReleaseDate = new DateTime(2025, 3, 28),
+            Code = "SV9",
+            Slug = "scarlet-and-violet-destined-rivals",
+            ImageFileName = "scarlet-and-violet-destined-rivals.webp",
+            IconFileName = "150_destined_rivals_set_logo.avif"
         },
         new LocalSetItem
         {
@@ -181,28 +225,9 @@
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 3, 28),
             Code = "SV9",
-            Slug = "journey-together",
-            ImageFileName = "scarlet-and-violet-white-flare.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Journey Together",
-            Series = "Scarlet & Violet",
-            SeriesSortOrder = 1,
-            ReleaseDate = new DateTime(2025, 3, 28),
-            Code = "SV9",
-            Slug = "journey-together",
-            ImageFileName = "scarlet-and-violet-destined-rivals.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Journey Together",
-            Series = "Scarlet & Violet",
-            SeriesSortOrder = 1,
-            ReleaseDate = new DateTime(2025, 3, 28),
-            Code = "SV9",
-            Slug = "journey-together",
-            ImageFileName = "scarlet-and-violet-journey-together.webp"
+            Slug = "scarlet-and-violet-journey-together",
+            ImageFileName = "scarlet-and-violet-journey-together.webp",
+            IconFileName = "149_journey_together_set_logo.avif"
         },
         new LocalSetItem
         {
@@ -211,8 +236,9 @@
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2025, 1, 17),
             Code = "SV8.5",
-            Slug = "prismatic-evolutions",
-            ImageFileName = "scarlet-and-violet-prismatic-evolutions.webp"
+            Slug = "scarlet-and-violet-prismatic-evolutions",
+            ImageFileName = "scarlet-and-violet-prismatic-evolutions.webp",
+            IconFileName = "148_prismatic_evolutions_set_logo.webp"
         },
         new LocalSetItem
         {
@@ -221,152 +247,167 @@
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-surging-sparks.webp"
+            Slug = "scarlet-and-violet-surging-sparks",
+            ImageFileName = "scarlet-and-violet-surging-sparks.webp",
+            IconFileName = "147_surging_sparks_set_logo.avif"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Stellar Crown",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-stellar-crown.webp"
+            Slug = "scarlet-and-violet-stellar-crown",
+            ImageFileName = "scarlet-and-violet-stellar-crown.webp",
+            IconFileName = "146_stellar_crown_setlogo.avif"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Shrouded Fable",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-shrouded-fable.webp"
+            Slug = "scarlet-and-violet-shrouded-fable",
+            ImageFileName = "scarlet-and-violet-shrouded-fable.webp",
+            IconFileName = "145_shrouded_fable_set_logo.avif"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Twilight Masquerade",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-twilight-masquerade.webp"
+            Slug = "scarlet-and-violet-twilight-masquerade",
+            ImageFileName = "scarlet-and-violet-twilight-masquerade.webp",
+            IconFileName = "144_twilight_masquerade_set_logo.avif"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Temporal Forces",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-temporal-forces.webp"
+            Slug = "scarlet-and-violet-temporal-forces",
+            ImageFileName = "scarlet-and-violet-temporal-forces.webp",
+            IconFileName = "143_temporal_forces_logo.avif"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Paldean Fates",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-paldean-fates.webp"
+            Slug = "scarlet-and-violet-paldean-fates",
+            ImageFileName = "scarlet-and-violet-paldean-fates.webp",
+            IconFileName = ""
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Paradox Rift",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-paradox-rift.webp"
+            Slug = "scarlet-and-violet-paradox-rift",
+            ImageFileName = "scarlet-and-violet-paradox-rift.webp",
+            IconFileName = "141_paradox_rift_set_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "151",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-151.webp"
+            Slug = "scarlet-and-violet-151",
+            ImageFileName = "scarlet-and-violet-151.webp",
+            IconFileName = "140_pokemon_151_set_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Obsidian Flames",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-obsidian-flames.webp"
+            Slug = "scarlet-and-violet-obsidian-flames",
+            ImageFileName = "scarlet-and-violet-obsidian-flames.webp",
+            IconFileName = "139_obsidian_flames_seet_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Paldea Evolved",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-paldea-evolved.webp"
+            Slug = "scarlet-and-violet-paldea-evolved",
+            ImageFileName = "scarlet-and-violet-paldea-evolved.webp",
+            IconFileName = "138_paldea_evolved_set_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Energies",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-energies.webp"
+            Slug = "scarlet-and-violet-energies",
+            ImageFileName = "scarlet-and-violet-energies.webp",
+            IconFileName = ""
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Scarlet & Violet",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet.webp"
+            Slug = "scarlet-and-violet",
+            ImageFileName = "scarlet-and-violet.webp",
+            IconFileName = "137_scarlet_violet_base_set_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Surging Sparks",
+            Name = "Scarlet & Violet Promos",
             Series = "Scarlet & Violet",
             SeriesSortOrder = 1,
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
-            Slug = "surging-sparks",
-            ImageFileName = "scarlet-and-violet-promos.webp"
+            Slug = "scarlet-and-violet-promos",
+            ImageFileName = "scarlet-and-violet-promos.webp",
+            IconFileName = "136_scarlet_violet_black_star_promos_pokemon_set_symbol.webp"
         },
 
         // =========================================================
-        // SWORD & SHIELD
+        // Sword & Shield
         // =========================================================
         new LocalSetItem
         {
-            Name = "Silver Tempest",
+            Name = "Crown Zenith Galarian Gallery",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 11, 11),
             Code = "SWSH12",
-            Slug = "silver-tempest",
-            ImageFileName = "sword-and-shield-crown-zenith-galarian-gallery.webp"
+            Slug = "sword-and-shield-crown-zenith-galarian-gallery",
+            ImageFileName = "sword-and-shield-crown-zenith-galarian-gallery.webp",
+            IconFileName = "135_crown-zenith_logo.webp"
         },
         new LocalSetItem
         {
-            Name = "Silver Tempest",
+            Name = "Crown Zenith",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 11, 11),
             Code = "SWSH12",
-            Slug = "silver-tempest",
-            ImageFileName = "sword-and-shield-crown-zenith.webp"
+            Slug = "sword-and-shield-crown-zenith",
+            ImageFileName = "sword-and-shield-crown-zenith.webp",
+            IconFileName = "135_crown-zenith_logo.webp"
         },
         new LocalSetItem
         {
@@ -375,8 +416,9 @@
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 11, 11),
             Code = "SWSH12",
-            Slug = "silver-tempest",
-            ImageFileName = "sword-and-shield-silver-tempest-trainer-gallery.webp"
+            Slug = "sword-and-shield-silver-tempest-trainer-gallery",
+            ImageFileName = "sword-and-shield-silver-tempest-trainer-gallery.webp",
+            IconFileName = "134_silver_tempest_pokemon_set_symbol.avif"
         },
         new LocalSetItem
         {
@@ -385,8 +427,20 @@
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 11, 11),
             Code = "SWSH12",
-            Slug = "silver-tempest",
-            ImageFileName = "sword-and-shield-silver-tempest.webp"
+            Slug = "sword-and-shield-silver-tempest",
+            ImageFileName = "sword-and-shield-silver-tempest.webp",
+            IconFileName = "134_silver_tempest_pokemon_set_symbol.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Lost Origin Trainer Gallery",
+            Series = "Sword & Shield",
+            SeriesSortOrder = 2,
+            ReleaseDate = new DateTime(2022, 9, 9),
+            Code = "SWSH11",
+            Slug = "sword-and-shield-lost-origin-trainer-gallery",
+            ImageFileName = "sword-and-shield-lost-origin-trainer-gallery.webp",
+            IconFileName = "133_lost_origin_pokemon_set_symbol.png"
         },
         new LocalSetItem
         {
@@ -395,118 +449,119 @@
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-lost-origin-trainer-gallery.webp"
+            Slug = "sword-and-shield-lost-origin",
+            ImageFileName = "sword-and-shield-lost-origin.webp",
+            IconFileName = ""
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Pokemon Go",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-lost-origin.webp"
+            Slug = "sword-and-shield-pokemon-go",
+            ImageFileName = "sword-and-shield-pokemon-go.webp",
+            IconFileName = "132_pokemon_go_pokemon_set_symbol.avif"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Astral Radiance",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-pokemon-go.webp"
+            Slug = "sword-and-shield-astral-radiance",
+            ImageFileName = "sword-and-shield-astral-radiance.webp",
+            IconFileName = "131_astral_radiance.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Astral Radiance Trainer Gallery",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-astral-radiance.webp"
+            Slug = "sword-and-shield-astral-radiance-trainer-gallery",
+            ImageFileName = "sword-and-shield-astral-radiance-trainer-gallery.webp",
+            IconFileName = "131_astral_radiance.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Brilliant Stars Trainer Gallery",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-astral-radiance-trainer-gallery.webp"
+            Slug = "sword-and-shield-brilliant-stars-trainer-gallery",
+            ImageFileName = "sword-and-shield-brilliant-stars-trainer-gallery.webp",
+            IconFileName = "130_brilliant_stars_pokemon_set_symbol.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Brilliant Stars",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-brilliant-stars-trainer-gallery.webp"
+            Slug = "sword-and-shield-brilliant-stars",
+            ImageFileName = "sword-and-shield-brilliant-stars.webp",
+            IconFileName = "130_brilliant_stars_pokemon_set_symbol.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Fusion Strike",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-brilliant-stars.webp"
+            Slug = "sword-and-shield-fusion-strike",
+            ImageFileName = "sword-and-shield-fusion-strike.webp",
+            IconFileName = "129_fusion_strike_pokemon_set_symbol.png"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Celebrations",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-fusion-strike.webp"
+            Slug = "sword-and-shield-celebrations",
+            ImageFileName = "sword-and-shield-celebrations.webp",
+            IconFileName = "128_celebrations_pokemon_set_symbol.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Evolving Skies",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-celebrations.webp"
+            Slug = "sword-and-shield-evolving-skies",
+            ImageFileName = "sword-and-shield-evolving-skies.webp",
+            IconFileName = "127_evolving_skies.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "0chilling Reign",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-evolving-skies.webp"
+            Slug = "sword-and-shield-0chilling-reign",
+            ImageFileName = "sword-and-shield-0chilling-reign.webp",
+            IconFileName = "126_chilling_reign.avif"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Battle Styles",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-0chilling-reign.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Lost Origin",
-            Series = "Sword & Shield",
-            SeriesSortOrder = 2,
-            ReleaseDate = new DateTime(2022, 9, 9),
-            Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-battle-styles.webp"
+            Slug = "sword-and-shield-battle-styles",
+            ImageFileName = "sword-and-shield-battle-styles.webp",
+            IconFileName = "125_battle_styles.avif"
         },
         new LocalSetItem
         {
@@ -515,8 +570,9 @@
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-shining-fates.webp"
+            Slug = "sword-and-shield-shining-fates",
+            ImageFileName = "sword-and-shield-shining-fates.webp",
+            IconFileName = "124_shining_fates.webp"
         },
         new LocalSetItem
         {
@@ -525,72 +581,79 @@
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-shining-fates.webp"
+            Slug = "sword-and-shield-shining-fates",
+            ImageFileName = "sword-and-shield-shining-fates.webp",
+            IconFileName = "124_shining_fates.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Vivid Voltage",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-vivid-voltage.webp"
+            Slug = "sword-and-shield-vivid-voltage",
+            ImageFileName = "sword-and-shield-vivid-voltage.webp",
+            IconFileName = "123_vivid_voltage.png"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Champions Path",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-champions-path.webp"
+            Slug = "sword-and-shield-champions-path",
+            ImageFileName = "sword-and-shield-champions-path.webp",
+            IconFileName = "122_champions_path.avif"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Darkness Ablaze",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-darkness-ablaze.webp"
+            Slug = "sword-and-shield-darkness-ablaze",
+            ImageFileName = "sword-and-shield-darkness-ablaze.webp",
+            IconFileName = "121_darkness_ablaze.png"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Rebel Clash",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-rebel-clash.webp"
+            Slug = "sword-and-shield-rebel-clash",
+            ImageFileName = "sword-and-shield-rebel-clash.webp",
+            IconFileName = "120_sword_shield_rebel_clash.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Sword & Shield",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield.webp"
+            Slug = "sword-and-shield",
+            ImageFileName = "sword-and-shield.webp",
+            IconFileName = "119_sword_shield_base.webp"
         },
         new LocalSetItem
         {
-            Name = "Lost Origin",
+            Name = "Sword & Shield Promos",
             Series = "Sword & Shield",
             SeriesSortOrder = 2,
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
-            Slug = "lost-origin",
-            ImageFileName = "sword-and-shield-promos.webp"
+            Slug = "sword-and-shield-promos",
+            ImageFileName = "sword-and-shield-promos.webp",
+            IconFileName = "118_sword_and_shield_promo.webp"
         },
 
         // =========================================================
-        // SUN & MOON
+        // Sun & Moon
         // =========================================================
         new LocalSetItem
         {
@@ -599,8 +662,9 @@
             SeriesSortOrder = 3,
             ReleaseDate = new DateTime(2019, 11, 1),
             Code = "SM12",
-            Slug = "cosmic-eclipse",
-            ImageFileName = "sun-and-moon-cosmic-eclipse.webp"
+            Slug = "sun-and-moon-cosmic-eclipse",
+            ImageFileName = "sun-and-moon-cosmic-eclipse.webp",
+            IconFileName = "117_cosmic_eclipse.avif"
         },
         new LocalSetItem
         {
@@ -609,8 +673,174 @@
             SeriesSortOrder = 3,
             ReleaseDate = new DateTime(2019, 8, 23),
             Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-hidden-fates.webp"
+            Slug = "sun-and-moon-hidden-fates",
+            ImageFileName = "sun-and-moon-hidden-fates.webp",
+            IconFileName = "116_hidden_fates.png"
+        },
+        new LocalSetItem
+        {
+            Name = "Hidden Fates",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-hidden-fates",
+            ImageFileName = "sun-and-moon-hidden-fates.webp",
+            IconFileName = "116_hidden_fates.png"
+        },
+        new LocalSetItem
+        {
+            Name = "Unified Minds",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-unified-minds",
+            ImageFileName = "sun-and-moon-unified-minds.webp",
+            IconFileName = "115_unified_minds.png"
+        },
+        new LocalSetItem
+        {
+            Name = "Unbroken Bonds",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-unbroken-bonds",
+            ImageFileName = "sun-and-moon-unbroken-bonds.webp",
+            IconFileName = "114_unbroken_bonds.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Detective Pikachu",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-detective-pikachu",
+            ImageFileName = "sun-and-moon-detective-pikachu.webp",
+            IconFileName = "113_detective_pikachu.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Team Up",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-team-up",
+            ImageFileName = "sun-and-moon-team-up.webp",
+            IconFileName = "112_team_up.png"
+        },
+        new LocalSetItem
+        {
+            Name = "Lost Thunder",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-lost-thunder",
+            ImageFileName = "sun-and-moon-lost-thunder.webp",
+            IconFileName = "111_sm_lost_thunder.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Dragon Majesty",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-dragon-majesty",
+            ImageFileName = "sun-and-moon-dragon-majesty.webp",
+            IconFileName = ""
+        },
+        new LocalSetItem
+        {
+            Name = "Celestial Storm",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-celestial-storm",
+            ImageFileName = "sun-and-moon-celestial-storm.webp",
+            IconFileName = "109_celestial_storm.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Forbidden Light",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-forbidden-light",
+            ImageFileName = "sun-and-moon-forbidden-light.webp",
+            IconFileName = "108_sun_and_moon_forbidden_light.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Ultra Prism",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-ultra-prism",
+            ImageFileName = "sun-and-moon-ultra-prism.webp",
+            IconFileName = "107_sun_and_moon_ultra_prism.png"
+        },
+        new LocalSetItem
+        {
+            Name = "Crimson Invasion",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-crimson-invasion",
+            ImageFileName = "sun-and-moon-crimson-invasion.webp",
+            IconFileName = "106_crimson_invation.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Shining Legends",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-shining-legends",
+            ImageFileName = "sun-and-moon-shining-legends.webp",
+            IconFileName = "105_shining_legends.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Burning Shadows",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-burning-shadows",
+            ImageFileName = "sun-and-moon-burning-shadows.webp",
+            IconFileName = "104_burning-shadows.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Guardians Rising",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon-guardians-rising",
+            ImageFileName = "sun-and-moon-guardians-rising.webp",
+            IconFileName = "103_guardians_rising.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Sun & Moon",
+            Series = "Sun & Moon",
+            SeriesSortOrder = 3,
+            ReleaseDate = new DateTime(2019, 8, 23),
+            Code = "SM115",
+            Slug = "sun-and-moon",
+            ImageFileName = "sun-and-moon.webp",
+            IconFileName = "101_sun_and_moon_base_set.webp"
         },
         new LocalSetItem
         {
@@ -619,158 +849,9 @@
             SeriesSortOrder = 3,
             ReleaseDate = new DateTime(2019, 8, 23),
             Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-hidden-fates.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-unified-minds.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-unbroken-bonds.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-detective-pikachu.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-team-up.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-lost-thunder.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-dragon-majesty.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-celestial-storm.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-forbidden-light.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-ultra-prism.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-crimson-invasion.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-shining-legends.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-burning-shadows.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-guardians-rising.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Sun & Moon Promos",
-            Series = "Sun & Moon",
-            SeriesSortOrder = 3,
-            ReleaseDate = new DateTime(2019, 8, 23),
-            Code = "SM115",
-            Slug = "hidden-fates",
-            ImageFileName = "sun-and-moon-promos.webp"
+            Slug = "sun-and-moon-promos",
+            ImageFileName = "sun-and-moon-promos.webp",
+            IconFileName = "100-sun-and-moon-promos.webp"
         },
 
         // =========================================================
@@ -783,172 +864,211 @@
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-evolutions.webp"
+            Slug = "xy-evolutions",
+            ImageFileName = "xy-evolutions.webp",
+            IconFileName = "099_evolutions.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Steam Siege",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-steam-siege.webp"
+            Slug = "xy-steam-siege",
+            ImageFileName = "xy-steam-siege.webp",
+            IconFileName = "098_steam_siege.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Fates Collide",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-fates-collide.webp"
+            Slug = "xy-fates-collide",
+            ImageFileName = "xy-fates-collide.webp",
+            IconFileName = "097_fates_collide.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Generations",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-generations.webp"
+            Slug = "xy-generations",
+            ImageFileName = "xy-generations.webp",
+            IconFileName = "095_generations_pokemon_set_symbol.png"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Breakpoint",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-breakpoint.webp"
+            Slug = "xy-breakpoint",
+            ImageFileName = "xy-breakpoint.webp",
+            IconFileName = "094_breakpoint.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Break Through",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-break-through.webp"
+            Slug = "xy-break-through",
+            ImageFileName = "xy-break-through.webp",
+            IconFileName = "093_breakthrough.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Ancient Origins",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-ancient-origins.webp"
+            Slug = "xy-ancient-origins",
+            ImageFileName = "xy-ancient-origins.webp",
+            IconFileName = "092_ancient_origins.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Roaring Skies",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-roaring-skies.webp"
+            Slug = "xy-roaring-skies",
+            ImageFileName = "xy-roaring-skies.webp",
+            IconFileName = "091_roaring_skies.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Double Crisis",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-double-crisis.webp"
+            Slug = "xy-double-crisis",
+            ImageFileName = "xy-double-crisis.webp",
+            IconFileName = "089_double_crisis.png"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Primal Clash",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-primal-clash.webp"
+            Slug = "xy-primal-clash",
+            ImageFileName = "xy-primal-clash.webp",
+            IconFileName = "088_primal_clash.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Phantom Forces",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-phantom-forces.webp"
+            Slug = "xy-phantom-forces",
+            ImageFileName = "xy-phantom-forces.webp",
+            IconFileName = "086_phantom_forces.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Furious Fists",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-furious-fists.webp"
+            Slug = "xy-furious-fists",
+            ImageFileName = "xy-furious-fists.webp",
+            IconFileName = "085_furious_fists.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Flashfire",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-flashfire.webp"
+            Slug = "xy-flashfire",
+            ImageFileName = "xy-flashfire.webp",
+            IconFileName = "083_flashfire.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "XY",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy.webp"
+            Slug = "xy",
+            ImageFileName = "xy.webp",
+            IconFileName = "082_xy_base_set.webp"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "Kalos Starter Set",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-kalos-starter-set.webp"
+            Slug = "xy-kalos-starter-set",
+            ImageFileName = "xy-kalos-starter-set.webp",
+            IconFileName = "081_xy-kalos-starter-set.png"
         },
         new LocalSetItem
         {
-            Name = "Evolutions",
+            Name = "XY Promos",
             Series = "XY",
             SeriesSortOrder = 4,
             ReleaseDate = new DateTime(2016, 11, 2),
             Code = "XY12",
-            Slug = "evolutions",
-            ImageFileName = "xy-promos.webp"
+            Slug = "xy-promos",
+            ImageFileName = "xy-promos.webp",
+            IconFileName = "080_xy_promos.webp"
         },
 
         // =========================================================
-        // BLACK & WHITE
+        // Black & White
         // =========================================================
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Legendary Treasures",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-legendary-treasures.webp"
+            Slug = "black-and-white-legendary-treasures",
+            ImageFileName = "black-and-white-legendary-treasures.webp",
+            IconFileName = "079_legendary_treasures.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Plasma Blast",
+            Series = "Black & White",
+            SeriesSortOrder = 5,
+            ReleaseDate = new DateTime(2013, 2, 6),
+            Code = "BW8",
+            Slug = "black-and-white-plasma-blast",
+            ImageFileName = "black-and-white-plasma-blast.webp",
+            IconFileName = "078_plasma_blast.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Plasma Freeze",
+            Series = "Black & White",
+            SeriesSortOrder = 5,
+            ReleaseDate = new DateTime(2013, 2, 6),
+            Code = "BW8",
+            Slug = "black-and-white-plasma-freeze",
+            ImageFileName = "black-and-white-plasma-freeze.webp",
+            IconFileName = "077_plasma_freeze.webp"
         },
         new LocalSetItem
         {
@@ -957,736 +1077,804 @@
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-plasma-blast.webp"
+            Slug = "black-and-white-plasma-storm",
+            ImageFileName = "black-and-white-plasma-storm.webp",
+            IconFileName = "076_plasma_storm.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Boundaries Crossed",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-plasma-freeze.webp"
+            Slug = "black-and-white-boundaries-crossed",
+            ImageFileName = "black-and-white-boundaries-crossed.webp",
+            IconFileName = "075_boundaries_crossed.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Dragon Vault",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-plasma-storm.webp"
+            Slug = "black-and-white-dragon-vault",
+            ImageFileName = "black-and-white-dragon-vault.webp",
+            IconFileName = "-74_dragons_vault.png"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Dragons Exalted",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-boundaries-crossed.webp"
+            Slug = "black-and-white-dragons-exalted",
+            ImageFileName = "black-and-white-dragons-exalted.webp",
+            IconFileName = "073_dragons_exaulted.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Dark Explorers",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-dragon-vault.webp"
+            Slug = "black-and-white-dark-explorers",
+            ImageFileName = "black-and-white-dark-explorers.webp",
+            IconFileName = "072_dark_explorers.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Next Destinies",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-dragons-exalted.webp"
+            Slug = "black-and-white-next-destinies",
+            ImageFileName = "black-and-white-next-destinies.webp",
+            IconFileName = "071_next_destinies.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Noble Victories",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-dark-explorers.webp"
+            Slug = "black-and-white-noble-victories",
+            ImageFileName = "black-and-white-noble-victories.webp",
+            IconFileName = "070_noble_victories.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Emerging Powers",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-next-destinies.webp"
+            Slug = "black-and-white-emerging-powers",
+            ImageFileName = "black-and-white-emerging-powers.webp",
+            IconFileName = "068_emerging_powers.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Black & White",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-noble-victories.webp"
+            Slug = "black-and-white",
+            ImageFileName = "black-and-white.webp",
+            IconFileName = "067_black_and_white_base_set.webp"
         },
         new LocalSetItem
         {
-            Name = "Plasma Storm",
+            Name = "Black & White Promos",
             Series = "Black & White",
             SeriesSortOrder = 5,
             ReleaseDate = new DateTime(2013, 2, 6),
             Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-emerging-powers.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Plasma Storm",
-            Series = "Black & White",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2013, 2, 6),
-            Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Plasma Storm",
-            Series = "Black & White",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2013, 2, 6),
-            Code = "BW8",
-            Slug = "plasma-storm",
-            ImageFileName = "black-and-white-promos.webp"
+            Slug = "black-and-white-promos",
+            ImageFileName = "black-and-white-promos.webp",
+            IconFileName = "066_black-and-white-promos.webp"
         },
 
         // =========================================================
-        // HEARTGOLD & SOULSILVER
+        // HeartGold & SoulSilver
         // =========================================================
         new LocalSetItem
         {
-            Name = "Undaunted",
+            Name = "HeartGold & SoulSilver",
             Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 6,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "call-of-legends.webp"
+            Slug = "call-of-legends",
+            ImageFileName = "call-of-legends.webp",
+            IconFileName = "065_call_of_legends.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Triumphant",
+            Series = "HeartGold & SoulSilver",
+            SeriesSortOrder = 6,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "HS3",
+            Slug = "hs-triumphant",
+            ImageFileName = "hs-triumphant.webp",
+            IconFileName = "064_triumphant.webp"
         },
         new LocalSetItem
         {
             Name = "Undaunted",
             Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 6,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "hs-triumphant.webp"
+            Slug = "hs-undaunted",
+            ImageFileName = "hs-undaunted.webp",
+            IconFileName = "063_undaunted.webp"
         },
         new LocalSetItem
         {
-            Name = "Undaunted",
+            Name = "Unleashed",
             Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 6,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "hs-undaunted.webp"
+            Slug = "hs-unleashed",
+            ImageFileName = "hs-unleashed.webp",
+            IconFileName = "062_unleashed.webp"
         },
         new LocalSetItem
         {
-            Name = "Undaunted",
+            Name = "HeartGold & SoulSilver",
             Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 6,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "hs-unleashed.webp"
+            Slug = "heartgold-soulsilver",
+            ImageFileName = "heartgold-soulsilver.webp",
+            IconFileName = "060-heartgold_and_soulsilver_base_set.webp"
         },
         new LocalSetItem
         {
-            Name = "Undaunted",
+            Name = "HeartGold & SoulSilver Promos",
             Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 6,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "heartgold-soulsilver.webp"
+            Slug = "heartgold-soulsilver-promos",
+            ImageFileName = "heartgold-soulsilver-promos.webp",
+            IconFileName = "059_heartgold-and-soulsilver-promos.webp"
         },
-        new LocalSetItem
-        {
-            Name = "Undaunted",
-            Series = "HeartGold & SoulSilver",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2010, 8, 18),
-            Code = "HS3",
-            Slug = "undaunted",
-            ImageFileName = "heartgold-soulsilver-promos.webp"
-        },
+
         // =========================================================
-        // PLATINUM
+        // Platinum
         // =========================================================
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Pokemon Rumble",
             Series = "Platinum",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 7,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "",
+            Slug = "platinum-pokemon-rumble",
+            ImageFileName = "platinum-pokemon-rumble.webp",
+            IconFileName = ""
+        },
+        new LocalSetItem
+        {
+            Name = "Arceus",
+            Series = "Platinum",
+            SeriesSortOrder = 7,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "",
+            Slug = "platinum-arceus",
+            ImageFileName = "platinum-arceus.webp",
+            IconFileName = "058_arceus.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Supreme Victors",
+            Series = "Platinum",
+            SeriesSortOrder = 7,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "",
+            Slug = "platinum-supreme-victors",
+            ImageFileName = "platinum-supreme-victors.webp",
+            IconFileName = "057_supreme_victors.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Rising Rivals",
+            Series = "Platinum",
+            SeriesSortOrder = 7,
+            ReleaseDate = new DateTime(2010, 8, 18),
+            Code = "",
+            Slug = "platinum-rising-rivals",
+            ImageFileName = "platinum-rising-rivals.webp",
+            IconFileName = "056_rising_rivals.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Platinum",
+            Series = "Platinum",
+            SeriesSortOrder = 7,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
             Slug = "platinum",
-            ImageFileName = "platinum-pokemon-rumble.webp"
+            ImageFileName = "platinum.webp",
+            IconFileName = "054_platinum_base_set.webp"
         },
-        new LocalSetItem
-        {
-            Name = "POP Series 2",
-            Series = "Platinum",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2010, 8, 18),
-            Code = "",
-            Slug = "platinum",
-            ImageFileName = "platinum-arceus.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "POP Series 2",
-            Series = "Platinum",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2010, 8, 18),
-            Code = "",
-            Slug = "platinum",
-            ImageFileName = "platinum-supreme-victors.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "POP Series 2",
-            Series = "Platinum",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2010, 8, 18),
-            Code = "",
-            Slug = "platinum",
-            ImageFileName = "platinum-rising-rivals.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "POP Series 2",
-            Series = "Platinum",
-            SeriesSortOrder = 5,
-            ReleaseDate = new DateTime(2010, 8, 18),
-            Code = "",
-            Slug = "platinum",
-            ImageFileName = "platinum.webp"
-        },
+
         // =========================================================
-        // DIAMOND AND PEARL
+        // Diamond & Pearl
         // =========================================================
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Stormfront",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-stormfront.webp"
+            Slug = "diamond-and-pearl-stormfront",
+            ImageFileName = "diamond-and-pearl-stormfront.webp",
+            IconFileName = "052_stormfront.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Legends Awakened",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-legends-awakened.webp"
+            Slug = "diamond-and-pearl-legends-awakened",
+            ImageFileName = "diamond-and-pearl-legends-awakened.webp",
+            IconFileName = "051_legends_awakened.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Majestic Dawn",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-majestic-dawn.webp"
+            Slug = "diamond-and-pearl-majestic-dawn",
+            ImageFileName = "diamond-and-pearl-majestic-dawn.webp",
+            IconFileName = "050_majestic_dawn.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Great Encounters",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-great-encounters.webp"
+            Slug = "diamond-and-pearl-great-encounters",
+            ImageFileName = "diamond-and-pearl-great-encounters.webp",
+            IconFileName = "048_great_encounters.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Secret Wonders",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-secret-wonders.webp"
+            Slug = "diamond-and-pearl-secret-wonders",
+            ImageFileName = "diamond-and-pearl-secret-wonders.webp",
+            IconFileName = "047_secret_wonders.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Mysterious Treasures",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-mysterious-treasures.webp"
+            Slug = "diamond-and-pearl-mysterious-treasures",
+            ImageFileName = "diamond-and-pearl-mysterious-treasures.webp",
+            IconFileName = "044_mysterious_treasures.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Diamond & Pearl",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl.webp"
+            Slug = "diamond-and-pearl",
+            ImageFileName = "diamond-and-pearl.webp",
+            IconFileName = "043_diamond_and_pearl_base_set.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "Diamond & Pearl Promos",
             Series = "Diamond & Pearl",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 8,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "diamond&pearl",
-            ImageFileName = "diamond-and-pearl-promos.webp"
+            Slug = "diamond-and-pearl-promos",
+            ImageFileName = "diamond-and-pearl-promos.webp",
+            IconFileName = "042_diamond-and-pearl-promos.webp"
         },
+
         // =========================================================
-        // POP SERIES
+        // POP Series
         // =========================================================
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "9",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-9.webp"
+            Slug = "pop-series-9",
+            ImageFileName = "pop-series-9.webp",
+            IconFileName = "055_pop_series_9.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "8",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-8.webp"
+            Slug = "pop-series-8",
+            ImageFileName = "pop-series-8.webp",
+            IconFileName = "053_pop_series_8.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "7",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-7.webp"
+            Slug = "pop-series-7",
+            ImageFileName = "pop-series-7.webp",
+            IconFileName = "049_pop_series_7.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "6",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-6.webp"
+            Slug = "pop-series-6",
+            ImageFileName = "pop-series-6.webp",
+            IconFileName = "046_pop_series_6.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "5",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-5.webp"
+            Slug = "pop-series-5",
+            ImageFileName = "pop-series-5.webp",
+            IconFileName = "041_pop_series_5.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "4",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-4.webp"
+            Slug = "pop-series-4",
+            ImageFileName = "pop-series-4.webp",
+            IconFileName = "037_pop_series_4.webp"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "3",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-3.webp"
+            Slug = "pop-series-3",
+            ImageFileName = "pop-series-3.webp",
+            IconFileName = "035_pop_series_3.png"
         },
         new LocalSetItem
         {
-            Name = "POP Series 2",
+            Name = "2",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-2.webp"
+            Slug = "pop-series-2",
+            ImageFileName = "pop-series-2.webp",
+            IconFileName = "030_pop_series_2.png"
         },
         new LocalSetItem
         {
-            Name = "POP Series 1",
+            Name = "1",
             Series = "POP Series",
-            SeriesSortOrder = 5,
+            SeriesSortOrder = 9,
             ReleaseDate = new DateTime(2010, 8, 18),
             Code = "",
-            Slug = "pop",
-            ImageFileName = "pop-series-1.webp"
+            Slug = "pop-series-1",
+            ImageFileName = "pop-series-1.webp",
+            IconFileName = "026_pop_series_1.avif"
         },
+
         // =========================================================
         // EX
         // =========================================================
         new LocalSetItem
         {
-            Name = "Ruby & Sapphire",
+            Name = "Power Keepers",
             Series = "EX",
-            SeriesSortOrder = 6,
+            SeriesSortOrder = 10,
             ReleaseDate = new DateTime(2002, 9, 15),
             Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-power-keepers.webp"
+            Slug = "ex-power-keepers",
+            ImageFileName = "ex-power-keepers.webp",
+            IconFileName = ""
+        },
+        new LocalSetItem
+        {
+            Name = "Dragon Frontiers",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-dragon-frontiers",
+            ImageFileName = "ex-dragon-frontiers.webp",
+            IconFileName = "039_dragon_frontiers.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Crystal Guardians",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-crystal-guardians",
+            ImageFileName = "ex-crystal-guardians.webp",
+            IconFileName = "038_crystal_guardians.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Holo Phantoms",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-holo-phantoms",
+            ImageFileName = "ex-holo-phantoms.webp",
+            IconFileName = "036_holon_phantoms.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Legend Maker",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-legend-maker",
+            ImageFileName = "ex-legend-maker.webp",
+            IconFileName = "033_legend_maker.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Delta Species",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-delta-species",
+            ImageFileName = "ex-delta-species.webp",
+            IconFileName = "032_delta_species.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Unseen Forces Unown",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-unseen-forces-unown",
+            ImageFileName = "ex-unseen-forces-unown.webp",
+            IconFileName = "031_unseen_forces.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Unseen Forces",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-unseen-forces",
+            ImageFileName = "ex-unseen-forces.webp",
+            IconFileName = "031_unseen_forces.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Emerald",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-emerald",
+            ImageFileName = "ex-emerald.webp",
+            IconFileName = "029_emerald.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Deoxys",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-deoxys",
+            ImageFileName = "ex-deoxys.webp",
+            IconFileName = "028_deoxys.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Team Rocket Returns",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-team-rocket-returns",
+            ImageFileName = "ex-team-rocket-returns.webp",
+            IconFileName = "027_team_rocket_returns.png"
+        },
+        new LocalSetItem
+        {
+            Name = "FireRed & LeafGreen",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-firered-and-firegreen",
+            ImageFileName = "ex-firered-and-firegreen.webp",
+            IconFileName = "025_firered_and_leafgreen.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Hidden Legends",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-hidden-legends",
+            ImageFileName = "ex-hidden-legends.webp",
+            IconFileName = "024_hidden_legends.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Team Magma Vs Team Aqua",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-team-magma-vs-team-aqua",
+            ImageFileName = "ex-team-magma-vs-team-aqua.webp",
+            IconFileName = "022_team_magma_vs_team_aqua.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Dragon",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-dragon",
+            ImageFileName = "ex-dragon.webp",
+            IconFileName = "021_dragon.webp"
+        },
+        new LocalSetItem
+        {
+            Name = "Sandstorm",
+            Series = "EX",
+            SeriesSortOrder = 10,
+            ReleaseDate = new DateTime(2002, 9, 15),
+            Code = "",
+            Slug = "ex-sandstorm",
+            ImageFileName = "ex-sandstorm.webp",
+            IconFileName = "020_sandstorm.avif"
         },
         new LocalSetItem
         {
             Name = "Ruby & Sapphire",
             Series = "EX",
-            SeriesSortOrder = 6,
+            SeriesSortOrder = 10,
             ReleaseDate = new DateTime(2002, 9, 15),
             Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-dragon-frontiers.webp"
+            Slug = "ex-ruby-and-sapphire",
+            ImageFileName = "ex-ruby-and-sapphire.webp",
+            IconFileName = "019_ruby_and_sapphire.avif"
         },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-crystal-guardians.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-holo-phantoms.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-legend-maker.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-delta-species.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-unseen-forces-unown.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-unseen-forces.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-emerald.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-deoxys.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-team-rocket-returns.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-firered-and-firegreen.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-hidden-legends.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-team-magma-vs-team-aqua.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-dragon.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-sandstorm.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Ruby & Sapphire",
-            Series = "EX",
-            SeriesSortOrder = 6,
-            ReleaseDate = new DateTime(2002, 9, 15),
-            Code = "",
-            Slug = "ecard",
-            ImageFileName = "ex-ruby-and-sapphire.webp"
-        },
+
         // =========================================================
         // E-Card
         // =========================================================
         new LocalSetItem
         {
-            Name = "Expedition Base Set",
+            Name = "E-Card",
             Series = "E-Card",
-            SeriesSortOrder = 7,
+            SeriesSortOrder = 11,
             ReleaseDate = new DateTime(2002, 9, 15),
             Code = "",
-            Slug = "ecard",
-            ImageFileName = "skyridge.webp"
+            Slug = "skyridge",
+            ImageFileName = "skyridge.webp",
+            IconFileName = "018_skyridge_pokemon_set_symbol.webp"
         },
         new LocalSetItem
         {
-            Name = "Aquapolis",
+            Name = "E-Card",
             Series = "E-Card",
-            SeriesSortOrder = 7,
+            SeriesSortOrder = 11,
             ReleaseDate = new DateTime(2003, 1, 15),
             Code = "",
-            Slug = "ecard",
-            ImageFileName = "aquapolis.webp"
+            Slug = "aquapolis",
+            ImageFileName = "aquapolis.webp",
+            IconFileName = "016_aquapolis_pokemon_set_symbol.png"
         },
         new LocalSetItem
         {
-            Name = "Expedition Base Set",
+            Name = "E-Card",
             Series = "E-Card",
-            SeriesSortOrder = 7,
+            SeriesSortOrder = 11,
             ReleaseDate = new DateTime(2002, 9, 15),
             Code = "",
-            Slug = "ecard",
-            ImageFileName = "expedition.webp"
+            Slug = "expedition",
+            ImageFileName = "expedition.webp",
+            IconFileName = "015_expedition_pokemon_set_symbol.png"
         },
+
         // =========================================================
-        // NEO
+        // Neo
         // =========================================================
         new LocalSetItem
         {
-            Name = "Neo Destiny",
+            Name = "Destiny",
             Series = "Neo",
-            SeriesSortOrder = 8,
+            SeriesSortOrder = 12,
             ReleaseDate = new DateTime(2002, 2, 28),
             Code = "",
-            Slug = "neo",
-            ImageFileName = "neo-destiny.webp"
+            Slug = "neo-destiny",
+            ImageFileName = "neo-destiny.webp",
+            IconFileName = "013_neo_destiny_pokemon_set_symbol.avif"
         },
         new LocalSetItem
         {
-            Name = "Neo Revelation",
+            Name = "Revelation",
             Series = "Neo",
-            SeriesSortOrder = 8,
+            SeriesSortOrder = 12,
             ReleaseDate = new DateTime(2001, 9, 21),
             Code = "",
-            Slug = "neo",
-            ImageFileName = "neo-revelation.webp"
+            Slug = "neo-revelation",
+            ImageFileName = "neo-revelation.webp",
+            IconFileName = "012_neo_revelation.avif"
         },
         new LocalSetItem
         {
-            Name = "Neo Discovery",
+            Name = "Southern Islands",
             Series = "Neo",
-            SeriesSortOrder = 8,
+            SeriesSortOrder = 12,
             ReleaseDate = new DateTime(2000, 6, 1),
             Code = "",
-            Slug = "neo",
-            ImageFileName = "neo-discovery.webp"
+            Slug = "southern-islands",
+            ImageFileName = "neo-southern_islands.webp",
+            IconFileName = "011_southern_islands.webp"
         },
         new LocalSetItem
         {
-            Name = "Neo Genesis",
+            Name = "Discovery",
             Series = "Neo",
-            SeriesSortOrder = 8,
+            SeriesSortOrder = 12,
+            ReleaseDate = new DateTime(2000, 6, 1),
+            Code = "",
+            Slug = "neo-discovery",
+            ImageFileName = "010_neo_discovery.png",
+            IconFileName = ""
+        },
+        new LocalSetItem
+        {
+            Name = "Genesis",
+            Series = "Neo",
+            SeriesSortOrder = 12,
             ReleaseDate = new DateTime(2000, 12, 16),
             Code = "",
-            Slug = "neo",
-            ImageFileName = "neo-genesis.webp"
+            Slug = "neo-genesis",
+            ImageFileName = "neo-genesis.webp",
+            IconFileName = "009_neo_genesis.png"
         },
+
         // =========================================================
-        // GYM
+        // Gym
         // =========================================================
         new LocalSetItem
         {
-            Name = "Gym Challenge",
+            Name = "Challenge",
             Series = "Gym",
-            SeriesSortOrder = 9,
+            SeriesSortOrder = 13,
             ReleaseDate = new DateTime(2000, 10, 16),
             Code = "",
-            Slug = "gym",
-            ImageFileName = "gym-challenge.webp"
+            Slug = "gym-challenge",
+            ImageFileName = "gym-challenge.webp",
+            IconFileName = "008_gym_challenge.avif"
         },
         new LocalSetItem
         {
-            Name = "Gym Heros",
+            Name = "Heroes",
             Series = "Gym",
-            SeriesSortOrder = 9,
+            SeriesSortOrder = 13,
             ReleaseDate = new DateTime(2000, 8, 14),
             Code = "",
-            Slug = "gym",
-            ImageFileName = "gym-heros.webp"
+            Slug = "gym-heros",
+            ImageFileName = "gym-heros.webp",
+            IconFileName = "007_gym_heroes.avif"
         },
+
         // =========================================================
-        // BASE SET
+        // Base Set
         // =========================================================
         new LocalSetItem
         {
-            Name = "Team Rocket",
+            Name = "Base Set",
             Series = "Base Set",
-            SeriesSortOrder = 10,
+            SeriesSortOrder = 14,
             ReleaseDate = new DateTime(2000, 4, 24),
             Code = "",
-            Slug = "base",
-            ImageFileName = "team-rocket.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Base Set 2",
-            Series = "Base Set",
-            SeriesSortOrder = 10,
-            ReleaseDate = new DateTime(2000, 2, 24),
-            Code = "",
-            Slug = "base",
-            ImageFileName = "base-set-2.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Fossil",
-            Series = "Base Set",
-            SeriesSortOrder = 10,
-            ReleaseDate = new DateTime(1999, 10, 10),
-            Code = "",
-            Slug = "base",
-            ImageFileName = "fossil.webp"
-        },
-        new LocalSetItem
-        {
-            Name = "Jungle",
-            Series = "Base Set",
-            SeriesSortOrder = 10,
-            ReleaseDate = new DateTime(1999, 6, 16),
-            Code = "",
-            Slug = "base",
-            ImageFileName = "jungle.webp"
+            Slug = "team-rocket",
+            ImageFileName = "team-rocket.webp",
+            IconFileName = "006_team_rocket.avif"
         },
         new LocalSetItem
         {
             Name = "Base Set",
             Series = "Base Set",
-            SeriesSortOrder = 10,
-            ReleaseDate = new DateTime(1999, 1, 9),
+            SeriesSortOrder = 14,
+            ReleaseDate = new DateTime(2000, 2, 24),
+            Code = "",
+            Slug = "base-set-2",
+            ImageFileName = "base-set-2.webp",
+            IconFileName = "005_base_set_2.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Base Set",
+            Series = "Base Set",
+            SeriesSortOrder = 14,
+            ReleaseDate = new DateTime(1999, 10, 10),
+            Code = "",
+            Slug = "fossil",
+            ImageFileName = "fossil.webp",
+            IconFileName = "004_fossil.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Base Set",
+            Series = "Base Set",
+            SeriesSortOrder = 14,
+            ReleaseDate = new DateTime(1999, 6, 16),
+            Code = "",
+            Slug = "jungle",
+            ImageFileName = "jungle.webp",
+            IconFileName = "002_jungle.avif"
+        },
+        new LocalSetItem
+        {
+            Name = "Base Set",
+            Series = "Base Set",
+            SeriesSortOrder = 14,
+            ReleaseDate = new DateTime(1999, 6, 16),
             Code = "",
             Slug = "base",
-            ImageFileName = "base-set.webp"
+            ImageFileName = "base-set.webp",
+            IconFileName = ""
         }
     };
 }
