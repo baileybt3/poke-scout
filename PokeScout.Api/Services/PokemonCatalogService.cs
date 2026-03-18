@@ -4,19 +4,23 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using PokeScout.Api.Dtos;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PokeScout.Api.Services;
+
 
 public sealed class PokemonCatalogService : IPokemonCatalogService
 {
     private readonly HttpClient _http;
+    private readonly IMemoryCache _cache;
     private const int SetCardsPageSize = 200;
 
-    public PokemonCatalogService(HttpClient http)
+    public PokemonCatalogService(HttpClient http, IMemoryCache cache)
     {
         _http = http;
+        _cache = cache;
     }
-
+    
     public async Task<List<CatalogSearchResultDto>> SearchByNameAsync(
         string name,
         CancellationToken cancellationToken = default)
@@ -62,15 +66,13 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
 
             var marketPrice = TryGetMarketPrice(card);
             var tcgPlayerUrl =
-                GetNestedString(card, "tcgplayer", "url") ??
-                GetNestedString(card, "cardmarket", "product_url") ??
-                "";
+                GetNestedString(card, "tcgplayer", "url") ?? "";
 
             results.Add(new CatalogSearchResultDto
             {
                 ExternalId = id,
                 Name = cardName,
-                ImageUrl = $"/api/catalog/image/{Uri.EscapeDataString(id)}?size=high",
+                ImageUrl = BuildImageProxyUrl(id),
                 SetName = setName,
                 Series = setCode,
                 Rarity = rarity,
@@ -207,7 +209,7 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
                 {
                     ExternalId = id,
                     Name = cardName,
-                    ImageUrl = $"/api/catalog/image/{Uri.EscapeDataString(id)}?size=high",
+                    ImageUrl = BuildImageProxyUrl(id),
                     SetId = resolvedSetId,
                     SetName = resolvedSetName,
                     Series = resolvedSetCode,
@@ -271,9 +273,9 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
     }
 
     public async Task<CatalogImageResult> GetImageAsync(
-        string id,
-        string size = "high",
-        CancellationToken cancellationToken = default)
+    string id,
+    string size = "high",
+    CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Image id is required.", nameof(id));
@@ -282,18 +284,50 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
             ? "high"
             : size.Trim().ToLowerInvariant();
 
-        var primaryResult = await TryGetImageAsync(id, normalizedSize, cancellationToken);
-        if (primaryResult is not null)
-            return primaryResult;
+        var cacheKey = $"catalog:image:{normalizedSize}:{id.Trim()}";
 
-        if (normalizedSize == "high")
+        if (_cache.TryGetValue(cacheKey, out CatalogImageResult? cached) && cached is not null)
+            return cached;
+
+        CatalogImageResult result;
+
+        try
         {
-            var lowResult = await TryGetImageAsync(id, "low", cancellationToken);
-            if (lowResult is not null)
-                return lowResult;
+            var primaryResult = await TryGetImageAsync(id, normalizedSize, cancellationToken);
+            if (primaryResult is not null)
+            {
+                result = primaryResult;
+            }
+            else if (normalizedSize == "high")
+            {
+                var lowResult = await TryGetImageAsync(id, "low", cancellationToken);
+                result = lowResult ?? CreatePlaceholderImageResult();
+            }
+            else
+            {
+                result = CreatePlaceholderImageResult();
+            }
+        }
+        catch
+        {
+            result = CreatePlaceholderImageResult();
         }
 
-        return CreatePlaceholderImageResult();
+        _cache.Set(
+            cacheKey,
+            result,
+            new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6),
+                SlidingExpiration = TimeSpan.FromMinutes(30)
+            });
+
+        return result;
+    }
+
+    private static string BuildImageProxyUrl(string id, string size = "high")
+    {
+        return $"/api/catalog/image?id={Uri.EscapeDataString(id)}&size={Uri.EscapeDataString(size)}";
     }
 
     private async Task<JsonDocument> GetJsonDocumentAsync(
@@ -313,9 +347,9 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
     }
 
     private async Task<CatalogImageResult?> TryGetImageAsync(
-        string id,
-        string size,
-        CancellationToken cancellationToken)
+    string id,
+    string size,
+    CancellationToken cancellationToken)
     {
         var url = $"images/{Uri.EscapeDataString(id)}?size={Uri.EscapeDataString(size)}";
 
@@ -331,8 +365,14 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
         if (response.StatusCode == HttpStatusCode.NotFound)
             return null;
 
-        var errorText = TryDecodeUtf8(bytes);
-        throw new Exception($"PokeWallet image failed: {(int)response.StatusCode} {response.ReasonPhrase}\n{errorText}");
+        if (response.StatusCode == HttpStatusCode.TooManyRequests ||
+            response.StatusCode == HttpStatusCode.Unauthorized ||
+            response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return CreatePlaceholderImageResult();
+        }
+
+        return CreatePlaceholderImageResult();
     }
 
     private static CatalogImageResult CreatePlaceholderImageResult()

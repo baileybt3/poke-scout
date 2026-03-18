@@ -58,11 +58,11 @@ public class CatalogController : ControllerBase
         return File(image.Bytes, image.ContentType);
     }
 
-    [HttpGet("image/{id}")]
+    [HttpGet("image")]
     public async Task<IActionResult> Image(
-        string id,
-        [FromQuery] string size = "high",
-        CancellationToken cancellationToken = default)
+    [FromQuery] string id,
+    [FromQuery] string size = "high",
+    CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("id is required.");

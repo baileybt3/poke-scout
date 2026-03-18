@@ -17,6 +17,9 @@ builder.Services
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// Memory Cache Service
+builder.Services.AddMemoryCache();
+
 // Register service in DI
 builder.Services.AddScoped<ICardService, EfCardService>();
 
