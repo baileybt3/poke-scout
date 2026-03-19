@@ -1,9 +1,7 @@
 ﻿@page "/sets"
 @rendermode InteractiveServer
-@using System.Net.Http.Json
-@inject HttpClient Http
 @inject NavigationManager Navigation
-@using System.Text.Json.Serialization
+
 
 <PageTitle>Sets</PageTitle>
 
@@ -86,8 +84,13 @@
 </div>
 
 @code {
-    private bool isLoading = true;
+    private bool isLoading = false;
     private string? error;
+
+    protected override void OnInitialized()
+    {
+        ApplyVerifiedSetKeys();
+    }
 
     private IEnumerable<IGrouping<string, LocalSetItem>> GroupedSets =>
         AllSets
@@ -96,101 +99,105 @@
             .ThenBy(s => s.Name)
             .GroupBy(s => s.Series);
 
-    protected override async Task OnInitializedAsync()
+    private void ApplyVerifiedSetKeys()
     {
-        await LoadApiSetIdsAsync();
-    }
-
-    private async Task LoadApiSetIdsAsync()
-    {
-        isLoading = true;
-        error = null;
-
-        try
+        foreach (var set in AllSets)
         {
-            var apiSets = await Http.GetFromJsonAsync<List<CatalogSetLookup>>("/api/catalog/sets") ?? [];
-
-            foreach (var localSet in AllSets)
+            if (VerifiedSetKeysByName.TryGetValue(set.Name, out var verifiedKey))
             {
-                var match = FindBestMatch(localSet, apiSets);
+                set.ApiSetId = verifiedKey;
+                continue;
+            }
 
-                if (match is not null && !string.IsNullOrWhiteSpace(match.EffectiveSetKey))
-                {
-                    // Prefer the live API key when we get one.
-                    localSet.ApiSetId = match.EffectiveSetKey;
-                }
-                // IMPORTANT:
-                // If no match is found, keep the existing hardcoded ApiSetId/Code fallback.
-                // Do NOT blank it out, or the button becomes dead.
+            if (!string.IsNullOrWhiteSpace(set.ApiSetId) && set.ApiSetId.All(char.IsDigit))
+            {
+                set.ApiSetId = "";
             }
         }
-        catch (Exception ex)
+    }
+
+    private static readonly Dictionary<string, string> VerifiedSetKeysByName =
+        new(StringComparer.OrdinalIgnoreCase)
         {
-            error = $"Failed to load set links: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+            // =========================================================
+            // Scarlet & Violet
+            // =========================================================
+            ["Black Bolt"] = "BLK",
+            ["White Flare"] = "WHT",
+            ["Destined Rivals"] = "DRI",
+            ["Journey Together"] = "JTG",
+            ["Prismatic Evolutions"] = "PRE",
+            ["Surging Sparks"] = "SSP",
+            ["Stellar Crown"] = "SCR",
+            ["Shrouded Fable"] = "SFA",
+            ["Twilight Masquerade"] = "TWM",
+            ["Temporal Forces"] = "TEF",
+            ["Paldean Fates"] = "PAF",
+            ["Paradox Rift"] = "PAR",
+            ["151"] = "MEW",
+            ["Obsidian Flames"] = "OBF",
+            ["Paldea Evolved"] = "PAL",
+            ["Scarlet & Violet"] = "SV1",
 
-    private static CatalogSetLookup? FindBestMatch(
-    LocalSetItem localSet,
-    List<CatalogSetLookup> apiSets)
-    {
-        var localName = NormalizeKey(localSet.Name);
-        var localCode = NormalizeKey(localSet.Code);
+            // =========================================================
+            // Sword & Shield
+            // =========================================================
+            ["Crown Zenith"] = "CRZ",
+            ["Silver Tempest"] = "SWSH12",
+            ["Lost Origin"] = "LOR",
+            ["Pokemon Go"] = "PGO",
+            ["Astral Radiance"] = "ASR",
+            ["Brilliant Stars"] = "BRS",
+            ["Fusion Strike"] = "FST",
+            ["Celebrations"] = "CEL",
+            ["Evolving Skies"] = "EVS",
+            ["Chilling Reign"] = "CRE",
+            ["Battle Styles"] = "BST",
+            ["Shining Fates"] = "SHF",
+            ["Vivid Voltage"] = "VIV",
+            ["Champions Path"] = "CPA",
+            ["Darkness Ablaze"] = "DAA",
+            ["Rebel Clash"] = "RCL",
+            ["Sword & Shield"] = "SSH",
 
-        return apiSets
-            .Select(apiSet => new
-            {
-                Set = apiSet,
-                Score = GetMatchScore(localName, localCode, apiSet)
-            })
-            .Where(x => x.Score > 0)
-            .OrderByDescending(x => x.Score)
-            .ThenBy(x => ReleaseDateDistance(x.Set, localSet.ReleaseDate))
-            .Select(x => x.Set)
-            .FirstOrDefault();
-    }
+            // =========================================================
+            // Sun & Moon
+            // =========================================================
+            ["Cosmic Eclipse"] = "CEC",
+            ["Hidden Fates"] = "HIF",
+            ["Unified Minds"] = "UNM",
+            ["Unbroken Bonds"] = "UNB",
+            ["Detective Pikachu"] = "DET",
+            ["Team Up"] = "TEU",
+            ["Lost Thunder"] = "LOT",
+            ["Dragon Majesty"] = "DRM",
+            ["Celestial Storm"] = "CES",
+            ["Forbidden Light"] = "FLI",
+            ["Ultra Prism"] = "UPR",
+            ["Crimson Invasion"] = "CIN",
+            ["Shining Legends"] = "SLG",
+            ["Burning Shadows"] = "BUS",
+            ["Guardians Rising"] = "GRI",
+            ["Sun & Moon"] = "SUM",
 
-    private static int GetMatchScore(string localName, string localCode, CatalogSetLookup apiSet)
-    {
-        var apiName = NormalizeKey(apiSet.Name);
-        var apiCode = NormalizeKey(apiSet.SetCode);
-
-        if (!string.IsNullOrWhiteSpace(localCode) && apiCode == localCode)
-            return 300;
-
-        if (apiName == localName)
-            return 200;
-
-        if (!string.IsNullOrWhiteSpace(apiName) &&
-            (apiName.Contains(localName) || localName.Contains(apiName)))
-            return 100;
-
-        return 0;
-    }
-
-    private static int ReleaseDateDistance(CatalogSetLookup apiSet, DateTime localReleaseDate)
-    {
-        var apiReleaseDate = apiSet.EffectiveReleaseDate;
-
-        if (DateTime.TryParse(apiReleaseDate, out var parsed))
-        {
-            return Math.Abs((parsed.Date - localReleaseDate.Date).Days);
-        }
-
-        return int.MaxValue;
-    }
-
-    private static string NormalizeKey(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return string.Empty;
-
-        return new string(value.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
-    }
+            // =========================================================
+            // XY
+            // =========================================================
+            ["Evolutions"] = "EVO",
+            ["Steam Siege"] = "STS",
+            ["Fates Collide"] = "FCO",
+            ["Generations"] = "GEN",
+            ["Breakpoint"] = "BKP",
+            ["Break Through"] = "BKT",
+            ["Ancient Origins"] = "AOR",
+            ["Roaring Skies"] = "ROS",
+            ["Double Crisis"] = "DCR",
+            ["Primal Clash"] = "PRC",
+            ["Phantom Forces"] = "PHF",
+            ["Furious Fists"] = "FFI",
+            ["Flashfire"] = "FLF",
+            ["XY"] = "XY"
+        };
 
     private void GoBackToCatalog()
     {
@@ -209,13 +216,9 @@
 
     private static string GetSetKey(LocalSetItem set)
     {
-        if (!string.IsNullOrWhiteSpace(set.ApiSetId))
-            return set.ApiSetId;
-
-        if (!string.IsNullOrWhiteSpace(set.Code))
-            return set.Code;
-
-        return "";
+        return string.IsNullOrWhiteSpace(set.ApiSetId)
+            ? ""
+            : set.ApiSetId;
     }
 
     private static string GetSetImagePath(string fileName)
@@ -248,39 +251,7 @@
         public string ImageFileName { get; init; } = "";
         public string IconFileName { get; init; } = "";
         public bool HasImage => !string.IsNullOrWhiteSpace(ImageFileName);
-        public bool IsAvailable => !string.IsNullOrWhiteSpace(ApiSetId) || !string.IsNullOrWhiteSpace(Code);
-    }
-
-    private sealed class CatalogSetLookup
-    {
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = "";
-
-        [JsonPropertyName("set_id")]
-        public string SetId { get; set; } = "";
-
-        [JsonPropertyName("set_code")]
-        public string SetCode { get; set; } = "";
-
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = "";
-
-        [JsonPropertyName("series")]
-        public string Series { get; set; } = "";
-
-        [JsonPropertyName("releaseDate")]
-        public string ReleaseDate { get; set; } = "";
-
-        [JsonPropertyName("release_date")]
-        public string ReleaseDateAlt { get; set; } = "";
-
-        public string EffectiveSetKey =>
-            !string.IsNullOrWhiteSpace(SetId) ? SetId :
-            !string.IsNullOrWhiteSpace(Id) ? Id :
-            SetCode;
-
-        public string EffectiveReleaseDate =>
-            !string.IsNullOrWhiteSpace(ReleaseDate) ? ReleaseDate : ReleaseDateAlt;
+        public bool IsAvailable => !string.IsNullOrWhiteSpace(ApiSetId);
     }
 
     private readonly List<LocalSetItem> AllSets = new()
@@ -319,7 +290,7 @@
             ReleaseDate = new DateTime(2026, 1, 30),
             Code = "",
             Slug = "mega-evolution-ascended-heros",
-            ApiSetId = "156",
+            ApiSetId = "",
             ImageFileName = "mega-evolution-ascended-heros.webp",
             IconFileName = "156_ascended_heroes_set_logo.webp"
         },
@@ -331,7 +302,7 @@
             ReleaseDate = new DateTime(2025, 11, 14),
             Code = "",
             Slug = "mega-evolution-phantasmal-flames",
-            ApiSetId = "155",
+            ApiSetId = "",
             ImageFileName = "mega-evolution-phantasmal-flames.webp",
             IconFileName = "155_phantasmal_flames_set_logo.avif"
         },
@@ -343,7 +314,7 @@
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
             Slug = "mega-evolution",
-            ApiSetId = "154",
+            ApiSetId = "",
             ImageFileName = "mega-evolution.webp",
             IconFileName = "154_mega_evolution_set_logo.webp"
         },
@@ -355,7 +326,7 @@
             ReleaseDate = new DateTime(2025, 9, 26),
             Code = "",
             Slug = "mega-evolution-promos",
-            ApiSetId = "153",
+            ApiSetId = "",
             ImageFileName = "mega-evolution-promos.webp",
             IconFileName = "153_mega_evolution_promos_set_logo.webp"
         },
@@ -371,7 +342,7 @@
             ReleaseDate = new DateTime(2025, 7, 18),
             Code = "SV9",
             Slug = "scarlet-and-violet-black-bolt",
-            ApiSetId = "151",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-black-bolt.webp",
             IconFileName = "151_black_bolt_logo.webp"
         },
@@ -383,7 +354,7 @@
             ReleaseDate = new DateTime(2025, 7, 18),
             Code = "SV9",
             Slug = "scarlet-and-violet-white-flare",
-            ApiSetId = "152",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-white-flare.webp",
             IconFileName = "152_white_flare_logo.webp"
         },
@@ -395,7 +366,7 @@
             ReleaseDate = new DateTime(2025, 5, 30),
             Code = "SV9",
             Slug = "scarlet-and-violet-destined-rivals",
-            ApiSetId = "150",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-destined-rivals.webp",
             IconFileName = "150_destined_rivals_set_logo.avif"
         },
@@ -407,7 +378,7 @@
             ReleaseDate = new DateTime(2025, 3, 28),
             Code = "SV9",
             Slug = "scarlet-and-violet-journey-together",
-            ApiSetId = "149",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-journey-together.webp",
             IconFileName = "149_journey_together_set_logo.avif"
         },
@@ -419,7 +390,7 @@
             ReleaseDate = new DateTime(2025, 1, 17),
             Code = "SV8.5",
             Slug = "scarlet-and-violet-prismatic-evolutions",
-            ApiSetId = "148",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-prismatic-evolutions.webp",
             IconFileName = "148_prismatic_evolutions_set_logo.webp"
         },
@@ -431,7 +402,7 @@
             ReleaseDate = new DateTime(2024, 11, 8),
             Code = "SV8",
             Slug = "scarlet-and-violet-surging-sparks",
-            ApiSetId = "147",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-surging-sparks.webp",
             IconFileName = "147_surging_sparks_set_logo.avif"
         },
@@ -443,7 +414,7 @@
             ReleaseDate = new DateTime(2024, 9, 13),
             Code = "SV8",
             Slug = "scarlet-and-violet-stellar-crown",
-            ApiSetId = "146",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-stellar-crown.webp",
             IconFileName = "146_stellar_crown_setlogo.avif"
         },
@@ -455,7 +426,7 @@
             ReleaseDate = new DateTime(2024, 8, 2),
             Code = "SV8",
             Slug = "scarlet-and-violet-shrouded-fable",
-            ApiSetId = "145",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-shrouded-fable.webp",
             IconFileName = "145_shrouded_fable_set_logo.avif"
         },
@@ -467,7 +438,7 @@
             ReleaseDate = new DateTime(2024, 5, 24),
             Code = "SV8",
             Slug = "scarlet-and-violet-twilight-masquerade",
-            ApiSetId = "144",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-twilight-masquerade.webp",
             IconFileName = "144_twilight_masquerade_set_logo.avif"
         },
@@ -479,7 +450,7 @@
             ReleaseDate = new DateTime(2024, 3, 22),
             Code = "SV8",
             Slug = "scarlet-and-violet-temporal-forces",
-            ApiSetId = "143",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-temporal-forces.webp",
             IconFileName = "143_temporal_forces_logo.avif"
         },
@@ -491,7 +462,7 @@
             ReleaseDate = new DateTime(2024, 1, 26),
             Code = "SV8",
             Slug = "scarlet-and-violet-paldean-fates",
-            ApiSetId = "142",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-paldean-fates.webp",
             IconFileName = "142_paldeaon_fates_logo.avif"
         },
@@ -503,7 +474,7 @@
             ReleaseDate = new DateTime(2023, 11, 3),
             Code = "SV8",
             Slug = "scarlet-and-violet-paradox-rift",
-            ApiSetId = "141",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-paradox-rift.webp",
             IconFileName = "141_paradox_rift_set_logo.webp"
         },
@@ -515,7 +486,7 @@
             ReleaseDate = new DateTime(2023, 9, 22),
             Code = "SV8",
             Slug = "scarlet-and-violet-151",
-            ApiSetId = "140",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-151.webp",
             IconFileName = "140_pokemon_151_set_logo.webp"
         },
@@ -527,7 +498,7 @@
             ReleaseDate = new DateTime(2023, 8, 11),
             Code = "SV8",
             Slug = "scarlet-and-violet-obsidian-flames",
-            ApiSetId = "139",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-obsidian-flames.webp",
             IconFileName = "139_obsidian_flames_seet_logo.webp"
         },
@@ -539,7 +510,7 @@
             ReleaseDate = new DateTime(2023, 6, 9),
             Code = "SV8",
             Slug = "scarlet-and-violet-paldea-evolved",
-            ApiSetId = "138",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-paldea-evolved.webp",
             IconFileName = "138_paldea_evolved_set_logo.webp"
         },
@@ -563,7 +534,7 @@
             ReleaseDate = new DateTime(2023, 3, 31),
             Code = "SV8",
             Slug = "scarlet-and-violet",
-            ApiSetId = "137",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet.webp",
             IconFileName = "137_scarlet_violet_base_set_logo.webp"
         },
@@ -575,7 +546,7 @@
             ReleaseDate = new DateTime(2023, 1, 1),
             Code = "SV8",
             Slug = "scarlet-and-violet-promos",
-            ApiSetId = "136",
+            ApiSetId = "",
             ImageFileName = "scarlet-and-violet-promos.webp",
             IconFileName = "136_scarlet_violet_black_star_promos_pokemon_set_symbol.webp"
         },
@@ -603,7 +574,7 @@
             ReleaseDate = new DateTime(2023, 1, 20),
             Code = "SWSH12",
             Slug = "sword-and-shield-crown-zenith",
-            ApiSetId = "135",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-crown-zenith.webp",
             IconFileName = "135_crown-zenith_logo.webp"
         },
@@ -627,7 +598,7 @@
             ReleaseDate = new DateTime(2022, 11, 11),
             Code = "SWSH12",
             Slug = "sword-and-shield-silver-tempest",
-            ApiSetId = "134",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-silver-tempest.webp",
             IconFileName = "134_silver_tempest_pokemon_set_symbol.avif"
         },
@@ -651,7 +622,7 @@
             ReleaseDate = new DateTime(2022, 9, 9),
             Code = "SWSH11",
             Slug = "sword-and-shield-lost-origin",
-            ApiSetId = "133",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-lost-origin.webp",
             IconFileName = "133_lost_origin_pokemon_set_symbol.png"
         },
@@ -663,7 +634,7 @@
             ReleaseDate = new DateTime(2022, 7, 1),
             Code = "SWSH11",
             Slug = "sword-and-shield-pokemon-go",
-            ApiSetId = "132",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-pokemon-go.webp",
             IconFileName = "132_pokemon_go_pokemon_set_symbol.avif"
         },
@@ -687,7 +658,7 @@
             ReleaseDate = new DateTime(2022, 5, 27),
             Code = "SWSH11",
             Slug = "sword-and-shield-astral-radiance",
-            ApiSetId = "131",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-astral-radiance.webp",
             IconFileName = "131_astral_radiance.webp"
         },
@@ -710,7 +681,7 @@
             ReleaseDate = new DateTime(2022, 2, 25),
             Code = "SWSH11",
             Slug = "sword-and-shield-brilliant-stars",
-            ApiSetId = "130",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-brilliant-stars.webp",
             IconFileName = "130_brilliant_stars_pokemon_set_symbol.webp"
         },
@@ -722,7 +693,7 @@
             ReleaseDate = new DateTime(2021, 11, 12),
             Code = "SWSH11",
             Slug = "sword-and-shield-fusion-strike",
-            ApiSetId = "129",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-fusion-strike.webp",
             IconFileName = "129_fusion_strike_pokemon_set_symbol.png"
         },
@@ -734,7 +705,7 @@
             ReleaseDate = new DateTime(2021, 10, 8),
             Code = "SWSH11",
             Slug = "sword-and-shield-celebrations",
-            ApiSetId = "128",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-celebrations.webp",
             IconFileName = "128_celebrations_pokemon_set_symbol.webp"
         },
@@ -758,7 +729,7 @@
             ReleaseDate = new DateTime(2021, 8, 27),
             Code = "SWSH11",
             Slug = "sword-and-shield-evolving-skies",
-            ApiSetId = "127",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-evolving-skies.webp",
             IconFileName = "127_evolving_skies.webp"
         },
@@ -770,7 +741,7 @@
             ReleaseDate = new DateTime(2021, 6, 18),
             Code = "SWSH11",
             Slug = "sword-and-shield-0chilling-reign",
-            ApiSetId = "126",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-chilling-reign.webp",
             IconFileName = "126_chilling_reign.avif"
         },
@@ -782,7 +753,7 @@
             ReleaseDate = new DateTime(2021, 3, 19),
             Code = "SWSH11",
             Slug = "sword-and-shield-battle-styles",
-            ApiSetId = "125",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-battle-styles.webp",
             IconFileName = "125_battle_styles.avif"
         },
@@ -805,7 +776,7 @@
             ReleaseDate = new DateTime(2021, 2, 19),
             Code = "SWSH11",
             Slug = "sword-and-shield-shining-fates",
-            ApiSetId = "124",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-shining-fates.webp",
             IconFileName = "124_shining_fates.webp"
         },
@@ -817,7 +788,7 @@
             ReleaseDate = new DateTime(2020, 11, 13),
             Code = "SWSH11",
             Slug = "sword-and-shield-vivid-voltage",
-            ApiSetId = "123",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-vivid-voltage.webp",
             IconFileName = "123_vivid_voltage.png"
         },
@@ -829,7 +800,7 @@
             ReleaseDate = new DateTime(2020, 9, 25),
             Code = "SWSH11",
             Slug = "sword-and-shield-champions-path",
-            ApiSetId = "122",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-champions-path.webp",
             IconFileName = "122_champions_path.avif"
         },
@@ -841,7 +812,7 @@
             ReleaseDate = new DateTime(2020, 8, 14),
             Code = "SWSH11",
             Slug = "sword-and-shield-darkness-ablaze",
-            ApiSetId = "121",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-darkness-ablaze.webp",
             IconFileName = "121_darkness_ablaze.png"
         },
@@ -853,7 +824,7 @@
             ReleaseDate = new DateTime(2020, 5, 1),
             Code = "SWSH11",
             Slug = "sword-and-shield-rebel-clash",
-            ApiSetId = "120",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-rebel-clash.webp",
             IconFileName = "120_sword_shield_rebel_clash.webp"
         },
@@ -865,7 +836,7 @@
             ReleaseDate = new DateTime(2020, 2, 7),
             Code = "SWSH11",
             Slug = "sword-and-shield",
-            ApiSetId = "119",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield.webp",
             IconFileName = "119_sword_shield_base.webp"
         },
@@ -877,7 +848,7 @@
             ReleaseDate = new DateTime(2019, 11, 15),
             Code = "SWSH11",
             Slug = "sword-and-shield-promos",
-            ApiSetId = "118",
+            ApiSetId = "",
             ImageFileName = "sword-and-shield-promos.webp",
             IconFileName = "118_sword_and_shield_promo.webp"
         },
