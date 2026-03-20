@@ -557,9 +557,7 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
 
     private CatalogSetCardDto MapCatalogCardToDto(CatalogCard card)
     {
-        var localPath = string.IsNullOrWhiteSpace(card.LocalImagePath)
-            ? GetExistingLocalImagePath(card.ExternalId, "low")
-            : card.LocalImagePath;
+        var localPath = GetExistingLocalImagePath(card.ExternalId, "low");
 
         return new CatalogSetCardDto
         {
@@ -579,7 +577,9 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
             HighPrice = card.HighPrice,
             PriceUpdatedAtUtc = card.PriceUpdatedAtUtc,
             TcgPlayerUrl = card.TcgPlayerUrl,
-            RemoteImageUrl = card.RemoteImageUrl,
+            RemoteImageUrl = string.IsNullOrWhiteSpace(card.RemoteImageUrl)
+                ? BuildImageProxyUrl(card.ExternalId, "low")
+                : card.RemoteImageUrl,
             LocalImagePath = localPath
         };
     }
@@ -621,12 +621,12 @@ public sealed class PokemonCatalogService : IPokemonCatalogService
     {
         var folder = GetImageCacheFolder(id, size);
         var bytesPath = Path.Combine(folder, "image.bin");
+        var contentTypePath = Path.Combine(folder, "content-type.txt");
 
-        if (!File.Exists(bytesPath))
+        if (!File.Exists(bytesPath) || !File.Exists(contentTypePath))
             return "";
 
-        return Path.GetRelativePath(_environment.ContentRootPath, bytesPath)
-            .Replace("\\", "/");
+        return BuildImageProxyUrl(id, size);
     }
 
     private static string BuildImageProxyUrl(string id, string size = "low")

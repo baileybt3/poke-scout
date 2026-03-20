@@ -74,7 +74,7 @@
                 <article class="card-tile">
                     <div class="card-image-wrap">
                         <img class="card-image"
-                             src="@GetApiImageUrl(card.ImageUrl)"
+                             src="@GetApiImageUrl(GetBestImageUrl(card))"
                              alt="@card.Name"
                              loading="lazy" />
                     </div>
@@ -187,6 +187,17 @@
         }
     }
 
+    private static string GetBestImageUrl(SetCardItem card)
+    {
+        if (!string.IsNullOrWhiteSpace(card.LocalImagePath))
+            return card.LocalImagePath;
+
+        if (!string.IsNullOrWhiteSpace(card.RemoteImageUrl))
+            return card.RemoteImageUrl;
+
+        return "";
+    }
+
     private string GetApiImageUrl(string? imageUrl)
     {
         if (string.IsNullOrWhiteSpace(imageUrl))
@@ -267,7 +278,8 @@
     {
         public string ExternalId { get; set; } = "";
         public string Name { get; set; } = "";
-        public string ImageUrl { get; set; } = "";
+        public string RemoteImageUrl { get; set; } = "";
+        public string LocalImagePath { get; set; } = "";
         public string SetId { get; set; } = "";
         public string SetName { get; set; } = "";
         public string Series { get; set; } = "";
