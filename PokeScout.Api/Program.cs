@@ -9,6 +9,15 @@ using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Create clean on-disk cache folders at the project root
+var catalogCacheRoot = Path.Combine(builder.Environment.ContentRootPath, "Storage", "CatalogCache");
+var catalogJsonCacheRoot = Path.Combine(catalogCacheRoot, "Json");
+var catalogImageCacheRoot = Path.Combine(catalogCacheRoot, "Images");
+
+Directory.CreateDirectory(catalogCacheRoot);
+Directory.CreateDirectory(catalogJsonCacheRoot);
+Directory.CreateDirectory(catalogImageCacheRoot);
+
 // Controllers for CardsController
 builder.Services
     .AddControllers()
