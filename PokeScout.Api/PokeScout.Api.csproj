@@ -25,4 +25,9 @@
     <ProjectReference Include="..\PokeScout.Infrastructure\PokeScout.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Storage\CatalogCache\Json\" />
+    <Folder Include="Storage\CatalogCache\Images\" />
+  </ItemGroup>
+
 </Project>
